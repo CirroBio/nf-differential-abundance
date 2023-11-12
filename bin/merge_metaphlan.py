@@ -10,6 +10,15 @@ import logging
 class MergeMetaphlan:
 
     logger: logging.Logger
+    levels = [
+        'kingdom',
+        'phylum',
+        'class',
+        'order',
+        'family',
+        'genus',
+        'species'
+    ]
 
     def __init__(self):
         self.setup_logger()
@@ -48,13 +57,57 @@ class MergeMetaphlan:
         self.logger.info(f"Output path: {self.output_fp}")
 
     def merge_abunds(self):
-        self.abund = pd.DataFrame({
-            name: abund
-            for name, abund in self.yield_abunds()
-        }).fillna(0)
+        self.abund = (
+            pd.DataFrame({
+                name: abund
+                for name, abund in self.yield_abunds()
+            })
+            .fillna(0)
+            .sort_index(axis=1)
+        )
 
         msg = f"Error: No data found in {self.path}"
         assert self.abund.shape[1] > 0, msg
+
+        # Write out the taxonomy table
+        self.write_taxonomy()
+
+        # Strip out the taxonomic path from the clade name
+        # and transpose so that taxa are in columns
+        self.abund = (
+            self.abund
+            .rename(
+                index=lambda s: s.rsplit("|", 1)[-1][3:]
+            )
+            .T
+        )
+
+    def write_taxonomy(self):
+        # Format the taxonomy table
+        self.logger.info("Formatting taxonomy")
+        tax = pd.DataFrame([
+            self.parse_taxonomy(tax_string)
+            for tax_string in self.abund.index.values
+        ])
+        tax = (
+            tax
+            .assign(index=tax['species'])
+            .set_index('index')
+        )
+        # Write out the taxonomy table
+        self.logger.info("Writing out to taxonomy.csv")
+        tax.to_csv("taxonomy.csv")
+
+    def parse_taxonomy(self, tax_string):
+        anc = {
+            self.get_tax_level(taxon[0]): taxon[3:]
+            for taxon in tax_string.split("|")
+        }
+        # Fill in any missing values
+        for i, n in enumerate(self.levels):
+            if anc.get(n) is None:
+                anc[n] = self.levels[i - 1]
+        return anc
 
     def yield_abunds(self):
         for path in Path(self.path).rglob(f"*{self.file_suffix}"):
@@ -72,20 +125,14 @@ class MergeMetaphlan:
             path,
             comment="#",
             names=header,
-            sep="\t"
+            sep="\t",
+            header=None
         )
         self.logger.info(f"Read in {abund.shape[0]:,} lines")
 
         # Annotate the taxonomic level
         abund = abund.assign(
             tax_level=abund["clade_name"].apply(self.get_tax_level)
-        )
-
-        # Strip out the taxonomic path from the clade name
-        abund = abund.assign(
-            clade_name=abund["clade_name"].apply(
-                lambda s: s.rsplit("|", 1)[-1]
-            )
         )
 
         # Filter to the specified level
