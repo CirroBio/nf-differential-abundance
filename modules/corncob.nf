@@ -15,7 +15,7 @@ process run_corncob {
 
 process split_corncob {
     container "${params.container}"
-    publishDir "${params.output}/corncob/", mode: 'copy', overwrite: true
+    publishDir "${params.data_output}/corncob/", mode: 'copy', overwrite: true
 
     input:
         path "corncob_results.csv"

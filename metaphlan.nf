@@ -36,7 +36,6 @@ workflow {
                 file(it.file, checkIfExists: true)
             ]
         }
-        .take(10)
         .set { input_ch }
 
     // Parse the read counts and the proportional abundances
@@ -60,4 +59,6 @@ workflow {
         corncob.out
     )
 
+    // Make the visualization elements
+    viz(ad_metaphlan.out)
 }

@@ -15,7 +15,7 @@ process parse {
 
 process join_abund {
     container "${params.container}"
-    publishDir "${params.output}/metaphlan/",
+    publishDir "${params.data_output}/metaphlan/",
         mode: 'copy',
         overwrite: true,
         saveAs: { filename -> "${params.tax_level}.${params.metric}.csv" }
@@ -33,7 +33,7 @@ process join_abund {
 
 process join_taxonomy {
     container "${params.container}"
-    publishDir "${params.output}/metaphlan/", mode: 'copy', overwrite: true
+    publishDir "${params.data_output}/metaphlan/", mode: 'copy', overwrite: true
 
     input:
     path "inputs/taxonomy.*.csv"

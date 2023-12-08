@@ -1,6 +1,6 @@
 process ad_metaphlan {
     container "${params.container}"
-    publishDir "${params.output}/anndata/", mode: 'copy', overwrite: true, pattern: "*.h5ad"
+    publishDir "${params.data_output}/anndata/", mode: 'copy', overwrite: true, pattern: "*.h5ad"
 
     input:
         path "counts.csv"
@@ -10,7 +10,7 @@ process ad_metaphlan {
         path "corncob/"
 
     output:
-        tuple path("metaphlan.h5ad", "variables.txt")
+        tuple path("metaphlan.h5ad"), path("variables.txt")
 
     script:
         template "ad_metaphlan.py"
