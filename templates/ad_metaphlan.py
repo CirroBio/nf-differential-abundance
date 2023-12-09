@@ -6,6 +6,9 @@ import pandas as pd
 from anndata import AnnData
 from pathlib import Path
 
+# Read in global config elements
+tax_level = "${params.tax_level}"
+
 # Read in all of the locally staged files
 dat = {
     fp.name.replace(".csv", ""): pd.read_csv(fp, index_col=0)
@@ -103,7 +106,8 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
 
         config[kw] = dict(
             title=f"Microbiome ~ {kw}",
-            description=f"Summary of organisms associated with {kw}"
+            description=f"Summary of organisms associated with {kw}",
+            obs_title=f"{tax_level.title()} Level Abundances (observations)"
         )
 
 # Write out the full data

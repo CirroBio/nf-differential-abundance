@@ -10,29 +10,29 @@ adata.T.write_zarr("var.zarr")
 
 
 # Format each of the visualizations
-def make_vt_config():
+def make_vt_config(kwargs):
 
     return {
         "version": "1.0.16",
-        "name": "Microbiome ~ CRC",
-        "description": "Summary of organisms associated with CRC",
+        "name": kwargs["title"],
+        "description": kwargs["description"],
         "datasets": [
             {
                 "uid": "A",
-                "name": "Species Level Abundances (observations)",
+                "name": kwargs["obs_title"],
                 "files": [
                     {
                         "fileType": "anndata.zarr",
-                        "url": "http://localhost:9000/obs.zarr",
+                        "url": "obs.zarr",
                         "options": {
                             "obsEmbedding": [
                                 {
-                                    "path": "obsm/X_umap",
+                                    "path": kwargs["ordination_path"],
                                     "dims": [
                                         0,
                                         1
                                     ],
-                                    "embeddingType": "UMAP"
+                                    "embeddingType": kwargs["ordination_title"]
                                 }
                             ],
                             "obsSets": [
