@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import numpy as np
 import pandas as pd
 from anndata import AnnData
@@ -13,8 +14,6 @@ dat = {
     if not fp.name.startswith(("mu.", "phi."))
 }
 
-assert "mu.CRC" not in dat
-
 for kw, df in dat.items():
     print(kw)
     print(df.head())
@@ -22,7 +21,7 @@ for kw, df in dat.items():
 
 # Make an AnnData object
 adata = AnnData(
-    dat["proportions"],
+    dat["proportions"].apply(lambda r: r / r.sum(), axis=1),
     obs=(
         # Make sure that we're indexing on the sample column
         dat["samplesheet"]
@@ -54,8 +53,8 @@ mask = adata.to_df().max() > min_abund
 print(f"Filtering to {mask.sum():,} / {mask.shape[0]:,} taxa")
 adata = adata[:, mask]
 
-# Add the stats
-variables = []
+# Start building the list of elements for visualization
+config = []
 for stats_fp in Path("corncob/").rglob("*.csv"):
     # Read the table
     df = pd.read_csv(stats_fp, index_col=0)
@@ -72,11 +71,13 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
     # Save the whole table
     adata.varm[name] = df
     print(adata.varm[name])
-    variables.append(name)
 
     # For the mu., make a volcano plot
     if name.startswith("mu."):
-        adata.varm[name[3:] + "_volcano"] = (
+        kw = name[3:]
+        varm_volcano = kw + "_volcano"
+        varm_ma = kw + "_ma"
+        adata.varm[varm_volcano] = (
             df
             .query("neg_log10_pvalue > 0.1")
             .reindex(
@@ -87,7 +88,7 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
         )
 
         # Also make an MA plot
-        adata.varm[name[3:] + "_ma"] = (
+        adata.varm[varm_ma] = (
             df
             .query("neg_log10_pvalue > 0.1")
             .reindex(
@@ -100,9 +101,14 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
             .values
         )
 
+        config[kw] = dict(
+            title=f"Microbiome ~ {kw}",
+            description=f"Summary of organisms associated with {kw}"
+        )
+
 # Write out the full data
 adata.write_h5ad("metaphlan.h5ad", compression="gzip")
 
 # Write out the list of variables for visualization
-with open("variables.txt", "w") as handle:
-    handle.write("\\n".join(variables))
+with open("config.json", "w") as handle:
+    json.dump(config, handle, indent=4)

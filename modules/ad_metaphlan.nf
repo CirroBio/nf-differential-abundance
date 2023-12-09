@@ -10,7 +10,7 @@ process ad_metaphlan {
         path "corncob/"
 
     output:
-        tuple path("metaphlan.h5ad"), path("variables.txt")
+        tuple path("metaphlan.h5ad"), path("config.json")
 
     script:
         template "ad_metaphlan.py"
