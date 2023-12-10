@@ -28,6 +28,15 @@ print("Ordinating with PCA")
 sc.tl.pca(adata)
 update_ordination_path("pca", "PCA")
 
+# UMAP
+print("Ordinating with UMAP")
+try:
+    sc.tl.umap(adata)
+    update_ordination_path("umap", "UMAP")
+except Exception as e:
+    print("Skipping UMAP")
+    print(str(e))
+
 #  t-SNE
 print("Ordinating with t-SNE")
 metric = 'braycurtis'
@@ -44,15 +53,6 @@ except Exception as e:
     print("Skipping t-SNE")
     print(str(e))
 
-
-# UMAP
-print("Ordinating with UMAP")
-try:
-    sc.tl.umap(adata)
-    update_ordination_path("umap", "UMAP")
-except Exception as e:
-    print("Skipping UMAP")
-    print(str(e))
 
 # Write out the annotated dataset
 adata.write_h5ad("annotated.h5ad")

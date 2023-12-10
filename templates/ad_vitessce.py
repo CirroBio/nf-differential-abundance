@@ -19,7 +19,7 @@ def make_vt_config(kwargs):
         "datasets": [
             {
                 "uid": "A",
-                "name": kwargs["obs_title"],
+                "name": f"{kwargs['obs_title']} ({kwargs['obs_type'].title()})",
                 "files": [
                     {
                         "fileType": "anndata.zarr",
@@ -35,70 +35,52 @@ def make_vt_config(kwargs):
                                     "embeddingType": kwargs["ordination_title"]
                                 }
                             ],
-                            "obsSets": [
-                                {
-                                    "name": "CRC",
-                                    "path": "obs/CRC"
-                                },
-                                {
-                                    "name": "BioProject",
-                                    "path": "obs/BioProject"
-                                }
-                            ],
+                            "obsSets": kwargs["obs_sets"],
                             "obsFeatureMatrix": {
                                 "path": "X"
                             }
                         },
                         "coordinationValues": {
-                            "obsType": "sample",
-                            "featureType": "species"
+                            "obsType": kwargs["obs_type"],
+                            "featureType": kwargs["feature_type"]
                         }
                     }
                 ]
             },
             {
                 "uid": "B",
-                "name": "Species Level Abundances (features)",
+                "name": f"{kwargs['obs_title']} ({kwargs['feature_type'].title()})",
                 "files": [
                     {
                         "fileType": "anndata.zarr",
-                        "url": "http://localhost:9000/var.zarr",
+                        "url": "var.zarr",
                         "options": {
                             "obsEmbedding": [
                                 {
-                                    "path": "obsm/CRC_volcano",
+                                    "path": f"obsm/{kwargs['volcano_varm']}",
                                     "dims": [
                                         0,
                                         1
                                     ],
-                                    "embeddingType": "CRC - Volcano Plot"
+                                    "embeddingType": kwargs["volcano_title"]
                                 },
                                 {
-                                    "path": "obsm/CRC_ma",
+                                    "path": f"obsm/{kwargs['ma_varm']}",
                                     "dims": [
                                         0,
                                         1
                                     ],
-                                    "embeddingType": "CRC - MA Plot"
+                                    "embeddingType": kwargs["ma_title"]
                                 }
                             ],
-                            "obsSets": [
-                                {
-                                    "name": "CRC-Associated",
-                                    "path": "obsm/mu.CRC/sig_diff"
-                                },
-                                {
-                                    "name": "Mean Proportion (%)",
-                                    "path": "obs/mean_proportion"
-                                }
-                            ],
+                            "obsSets": kwargs["var_sets"],
                             "obsFeatureMatrix": {
                                 "path": "X"
                             }
                         },
                         "coordinationValues": {
-                            "obsType": "species",
-                            "featureType": "sample"
+                            "obsType": kwargs["feature_type"],
+                            "featureType": kwargs["obs_type"]
                         }
                     }
                 ]
@@ -110,14 +92,14 @@ def make_vt_config(kwargs):
                 "B": "B"
             },
             "embeddingType": {
-                "A": "UMAP",
-                "B": "CRC - Volcano Plot",
-                "C": "CRC - MA Plot"
+                "A": kwargs["ordination_title"],
+                "B": kwargs["volcano_title"],
+                "C": kwargs["ma_title"]
             },
             "embeddingZoom": {
                 "A": 3,
-                "B": 5,
-                "C": 5
+                "B": 8,
+                "C": 8
             },
             "embeddingTargetX": {
                 "A": 0,
@@ -145,25 +127,25 @@ def make_vt_config(kwargs):
                 "C": "cellSetSelection"
             },
             "featureSelection": {
-                "A": ["Escherichia_coli"],
+                "A": [kwargs["top_taxon"]],
                 "B": ["None"],
                 "C": ["None"]
             },
             "obsSetColor": {
-                "A": null,
-                "B": null
+                "A": None,
+                "B": None
             },
             "obsSetSelection": {
-                "A": null,
-                "B": null
+                "A": None,
+                "B": None
             },
             "obsType": {
-                "A": "sample",
-                "B": "species"
+                "A": kwargs["obs_type"],
+                "B": kwargs["feature_type"]
             },
             "featureType": {
-                "A": "species",
-                "B": "sample"
+                "A": kwargs["feature_type"],
+                "B": kwargs["obs_type"]
             }
         },
         "layout": [
@@ -322,5 +304,6 @@ with open("config.json", "r") as handle:
     config: dict = json.load(handle)
 
 for kw, elem in config.items():
+    vt_config = make_vt_config(elem)
     with open(f"{kw}.vt.json", "w") as handle:
-        json.dump(elem, handle, indent=4)
+        json.dump(vt_config, handle, indent=4)

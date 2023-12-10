@@ -7,6 +7,7 @@ process vitessce {
 
     output:
         path "*.zarr", hidden: true
+        path "*.json"
 
     script:
     template "ad_vitessce.py"
