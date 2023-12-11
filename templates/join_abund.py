@@ -23,7 +23,7 @@ def main():
         .fillna(0)
         .sort_index(axis=0)
         .sort_index(axis=1)
-        .to_csv("abund.csv")
+        .to_csv("${params.metric}.csv")
     )
 
 

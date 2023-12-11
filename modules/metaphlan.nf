@@ -1,3 +1,12 @@
+include { join_abund } from "./join_abund.nf" addParams(
+    tool: "metaphlan",
+    metric: params.metric
+)
+
+include { join_taxonomy } from "./join_taxonomy.nf" addParams(
+    tool: "metaphlan"
+)
+
 process parse {
     container "${params.container}"
 
@@ -10,39 +19,6 @@ process parse {
 
     script:
     template "read_metaphlan.py"
-
-}
-
-process join_abund {
-    container "${params.container}"
-    publishDir "${params.data_output}/metaphlan/",
-        mode: 'copy',
-        overwrite: true,
-        saveAs: { filename -> "${params.tax_level}.${params.metric}.csv" }
-
-    input:
-    path "inputs/"
-
-    output:
-    path "abund.csv"
-
-    script:
-    template "join_abund.py"
-
-}
-
-process join_taxonomy {
-    container "${params.container}"
-    publishDir "${params.data_output}/metaphlan/", mode: 'copy', overwrite: true
-
-    input:
-    path "inputs/taxonomy.*.csv"
-
-    output:
-    path "taxonomy.csv"
-
-    script:
-    template "join_taxonomy.py"
 
 }
 

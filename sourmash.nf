@@ -4,9 +4,8 @@ nextflow.enable.dsl=2
 
 // Use the same process to parse two different metrics
 // from the same set of output files
-include { read as read_counts } from './modules/metaphlan.nf' addParams(metric: 'estimated_number_of_reads_from_the_clade')
-include { read as read_prop } from './modules/metaphlan.nf' addParams(metric: 'relative_abundance')
-include { make_anndata } from './modules/make_anndata.nf' addParams(tool: 'metaphlan')
+include { read } from './modules/sourmash.nf'
+include { make_anndata } from './modules/make_anndata.nf' addParams(tool: 'sourmash')
 
 // Functions shared across input types
 include { corncob } from './modules/corncob.nf'
@@ -39,16 +38,15 @@ workflow {
         }
         .set { input_ch }
 
-    // Parse the read counts and the proportional abundances
-    read_counts(input_ch)
-    read_prop(input_ch)
+    // Parse the pseudo read counts (total_weighted_hashes) and the proportional abundances
+    read(input_ch)
 
     if(params.method == "corncob"){
 
         // Run corncob for stats
         corncob(
-            read_counts.out.abund,
-            read_counts.out.taxonomy,
+            read.out.counts,
+            read.out.taxonomy,
             samplesheet
         )
         stats_output = corncob.out
@@ -59,7 +57,7 @@ workflow {
         }
         // Run wilcoxon for stats
         wilcoxon(
-            read_counts.out.abund,
+            read.out.proportions,
             samplesheet
         )
         stats_output = wilcoxon.out
@@ -69,9 +67,9 @@ workflow {
     // Make an AnnData object with both proportions and counts
     // as well as the stats results
     make_anndata(
-        read_counts.out.abund,
-        read_prop.out.abund,
-        read_prop.out.taxonomy,
+        read.out.counts,
+        read.out.proportions,
+        read.out.taxonomy,
         samplesheet,
         stats_output
     )

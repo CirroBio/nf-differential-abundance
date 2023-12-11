@@ -225,12 +225,12 @@ for stats_fp in Path("stats/").rglob("*.csv"):
         )
 
 # Write out the full data
-adata.write_h5ad("metaphlan.h5ad", compression="gzip")
+adata.write_h5ad("${params.tool}.h5ad", compression="gzip")
 
 # Write out the list of variables for visualization
 with open("output_config.json", "w") as handle:
     json.dump(config, handle, indent=4)
 
 # Write out a short summary
-with open("metaphlan.h5ad.txt", "w") as handle:
+with open("${params.tool}.h5ad.txt", "w") as handle:
     handle.write(str(adata))

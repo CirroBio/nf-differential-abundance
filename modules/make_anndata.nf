@@ -1,4 +1,4 @@
-process ad_metaphlan {
+process make_anndata {
     container "${params.container}"
     publishDir "${params.data_output}/anndata/", mode: 'copy', overwrite: true, pattern: "*.h5ad"
 
@@ -10,8 +10,8 @@ process ad_metaphlan {
         path "stats/"
 
     output:
-        tuple path("metaphlan.h5ad"), path("output_config.json")
+        tuple path("${params.tool}.h5ad"), path("output_config.json")
 
     script:
-        template "ad_metaphlan.py"
+        template "make_anndata.py"
 }

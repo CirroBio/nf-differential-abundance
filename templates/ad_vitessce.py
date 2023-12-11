@@ -305,7 +305,22 @@ with open("input_config.json", "r") as handle:
 
 print(config)
 
+# Keep a list of all of the files which have been written
+chart_manifest = []
 for kw, elem in config.items():
     vt_config = make_vt_config(elem)
-    with open(f"{kw}.vt.json", "w") as handle:
+    fp = f"{kw}.vt.json"
+    with open(fp, "w") as handle:
         json.dump(vt_config, handle, indent=4)
+
+    chart_manifest.append(
+        dict(
+            type="vitessce",
+            config=fp,
+            name=elem["title"],
+            desc=elem["description"]
+        )
+    )
+
+with open("chart.manifest.json", "w") as handle:
+    json.dump(chart_manifest, handle, indent=4)

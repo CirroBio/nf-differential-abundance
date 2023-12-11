@@ -4,7 +4,7 @@ import pandas as pd
 import logging
 
 
-class ReadMetaphlan:
+class ReadSourmash:
 
     logger: logging.Logger
     levels = [
@@ -21,7 +21,8 @@ class ReadMetaphlan:
         self.setup_logger()
         self.get_args()
         self.read_abund()
-        self.write_abund()
+        self.write_abund("bp_match_at_rank", "counts")
+        self.write_abund("f_weighted_at_rank", "proportions")
         self.write_taxonomy()
 
     def setup_logger(self):
@@ -29,7 +30,7 @@ class ReadMetaphlan:
         self.logger.setLevel(logging.INFO)
         console_handler = logging.StreamHandler()
         log_formatter = logging.Formatter(
-            '%(asctime)s %(levelname)-8s [ReadMetaphlan] %(message)s'
+            '%(asctime)s %(levelname)-8s [ReadSourmash] %(message)s'
         )
         console_handler.setFormatter(log_formatter)
         self.logger.addHandler(console_handler)
@@ -45,23 +46,20 @@ class ReadMetaphlan:
         self.tax_level = "${params.tax_level}"
         self.logger.info(f"Taxonomic level: {self.tax_level}")
 
-        self.metric = "${params.metric}"
-        self.logger.info(f"Metric: {self.metric}")
-
-        self.output_fp = f"{self.name}.csv"
-        self.logger.info(f"Output path: {self.output_fp}")
-
     def write_taxonomy(self):
         # Format the taxonomy table
         self.logger.info("Formatting taxonomy")
         tax = pd.DataFrame([
             self.parse_taxonomy(tax_string)
-            for tax_string in self.abund["clade_name"].values
+            for tax_string in self.abund["lineage"].values
         ])
         tax = (
             tax
             .assign(index=tax[self.tax_level])
             .set_index('index')
+            .rename(
+                index=lambda s: s.replace(" ", "_")
+            )
         )
         # Write out the taxonomy table
         self.logger.info("Writing out to taxonomy.csv")
@@ -71,8 +69,8 @@ class ReadMetaphlan:
         if not isinstance(tax_string, str):
             print(tax_string)
         anc = {
-            self.get_tax_level(taxon[0]): taxon[3:]
-            for taxon in tax_string.split("|")
+            self.get_tax_level(taxon): taxon[3:]
+            for taxon in tax_string.split(";")
         }
         # Fill in any missing values
         for i, n in enumerate(self.levels):
@@ -81,47 +79,30 @@ class ReadMetaphlan:
         return anc
 
     def read_abund(self):
-        # Get the headers
-        header = self.get_header(self.path)
-        self.logger.info(f"Header: {','.join(header)}")
 
         # Read the table of abundances
-        self.abund = pd.read_csv(
-            self.path,
-            comment="#",
-            names=header,
-            sep="\\t",
-            header=None
-        )
+        self.abund = pd.read_csv(self.path)
         self.logger.info(f"Read in {self.abund.shape[0]:,} lines")
-        assert (
-            self.abund["clade_name"]
-            .apply(lambda v: isinstance(v, str))
-            .all()
-        ), self.abund["clade_name"]
-
-        # Annotate the taxonomic level
-        self.abund = self.abund.assign(
-            tax_level=self.abund["clade_name"].apply(self.get_tax_level)
-        )
 
         # Filter to the specified level
-        self.abund = self.abund.query(f"tax_level == '{self.tax_level}'")
+        self.abund = self.abund.query(f"rank == '{self.tax_level}'")
         self.logger.info(f"Filtered down to {self.abund.shape[0]:,} lines")
 
-        # Only return the specified metric
-        msg = f"Did not find {self.metric} in header"
-        assert self.metric in self.abund.columns.values, msg
+        # Just get the columns of interest
+        self.abund = self.abund.reindex(
+            columns=["lineage", "f_weighted_at_rank", "bp_match_at_rank"]
+        )
 
-        self.abund = self.abund.reindex(columns=["clade_name", self.metric])
+        # Remove any unclassified
+        self.abund = self.abund.query("lineage != 'unclassified'")
 
     @staticmethod
-    def get_tax_level(clade_name):
-        if clade_name == "UNCLASSIFIED":
+    def get_tax_level(lineage: str):
+        if lineage.upper() == "UNCLASSIFIED":
             return
 
         mapping = dict(
-            k="kingdom",
+            d="kingdom",
             p="phylum",
             c="class",
             o="order",
@@ -132,40 +113,35 @@ class ReadMetaphlan:
         )
         # Get the first character of the final label
         # slc = single-letter code
-        slc = clade_name.split("|")[-1][0]
+        slc = lineage[0]
 
-        assert slc in mapping, f"Couldn't parse tax_level: {clade_name}"
+        assert slc in mapping, f"Couldn't parse tax_level: {lineage}"
 
         return mapping[slc]
 
-    @staticmethod
-    def get_header(path):
-        with open(path) as handle:
-            for line in handle:
-                if line.startswith("#clade_name"):
-                    return line[1:].rstrip("\\n").split("\\t")
-
-    def write_abund(self):
+    def write_abund(self, metric, suffix):
+        output_fp = f"{self.name}.{suffix}.csv"
+        self.logger.info(f"Writing out to {output_fp}")
         # Only write out the final organism name
-        self.logger.info(f"Writing out to {self.output_fp}")
         (
             self.abund
             .assign(
-                clade_name=self.abund["clade_name"].apply(
-                    lambda s: s.split("|")[-1][3:]
+                lineage=self.abund["lineage"].apply(
+                    lambda s: s.split(";")[-1][3:].replace(" ", "_")
                 )
             )
             .rename(
                 columns={
-                    self.metric: self.name
+                    metric: self.name
                 }
             )
+            .reindex(columns=["lineage", self.name])
             .to_csv(
-                self.output_fp,
+                output_fp,
                 index=None
             )
         )
 
 
 if __name__ == "__main__":
-    ReadMetaphlan()
+    ReadSourmash()
