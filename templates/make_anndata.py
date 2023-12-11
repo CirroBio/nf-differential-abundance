@@ -184,16 +184,16 @@ for stats_fp in Path("stats/").rglob("*.csv"):
         # the data will ultimately be transposed for viewing)
         var_sets = [
             {
+                "name": f"{kw}-Associated",
+                "path": f"obsm/{name}/sig_diff"
+            },
+            {
                 "name": "p-value",
                 "path": f"obsm/{name}/p_value"
             },
             {
                 "name": effect_title,
                 "path": f"obsm/{name}/{effect_cname}"
-            },
-            {
-                "name": f"{kw}-Associated",
-                "path": f"obsm/{name}/sig_diff"
             },
             {
                 "name": "Average Abundance (%)",
