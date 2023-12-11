@@ -9,7 +9,42 @@ from pathlib import Path
 
 # Scale values from -0.5 to 0.5
 def scale_values(v: pd.Series):
-    return -0.5 + (v - v.min()) / (v.max() - v.min())
+    # Do not divide by zero for invariant data
+    span = v.max() - v.min()
+    return -0.5 + (v - v.min()) / (span if span > 0 else 1)
+
+
+# Add a table to the AnnData object, with scaled values
+def add_varm(
+    adata: AnnData,
+    kw: str,
+    df: pd.DataFrame,
+    cnames: list
+):
+    print(f"Preparing to add the {kw} table")
+    print(df.to_csv())
+    print(f"Using columns: {', '.join(cnames)}")
+
+    # Filter on the 'show' column
+    assert "show" in df.columns.values
+    df = df.query("show")
+    assert df.shape[0] > 0
+    assert df.dropna().shape[0] > 0, df.to_csv()
+
+    # Just get the columns of interest
+    df = df.reindex(
+        columns=cnames,
+        index=adata.var_names
+    )
+    assert df.shape[0] > 0
+    assert df.dropna().shape[0] > 0, df.to_csv()
+
+    # Scale the values
+    df = df.apply(scale_values)
+    assert df.shape[0] > 0
+    assert df.dropna().shape[0] > 0, df.to_csv()
+
+    adata.varm[kw] = df.values
 
 
 # Read in global config elements
@@ -47,7 +82,8 @@ adata = AnnData(
     var=(
         dat["taxonomy"]
         .assign(
-            mean_proportion=dat["proportions"].mean()
+            mean_proportion=dat["proportions"].mean(),
+            mean_prevalence=(dat["proportions"] > 0).mean()
         )
     ),
     layers=dict(
@@ -71,19 +107,38 @@ mask = adata.to_df().max() > min_abund
 print(f"Filtering to {mask.sum():,} / {mask.shape[0]:,} taxa")
 adata = adata[:, mask]
 
+# Color taxa that exceed the fdr_cutoff
+fdr_cutoff = float("${params.fdr_cutoff}")
+
 # Start building the list of elements for visualization
 config = dict()
 for stats_fp in Path("stats/").rglob("*.csv"):
+
     # Read the table
     df = pd.read_csv(stats_fp, index_col=0)
+
     # Make the order match
     df = df.reindex(index=adata.var_names)
+
     # Add the -log10(pvalue)
     df = df.assign(
         neg_log10_pvalue=-df["p_value"].apply(np.log10),
-        sig_diff=df["p_value"] <= 0.05,
+        sig_diff=df["p_value"] <= fdr_cutoff,
         mean_abund=adata.to_df().fillna(0).mean()
     )
+
+    # Only show features in the volcano and MA plots which
+    # have a neg_log10_pvalue > 0.1,
+    # unless there are < 10 features under the threshold,
+    # in which case all should be shown
+    df = df.assign(
+        show=(
+            df["neg_log10_pvalue"] > 0.1
+            if (df["neg_log10_pvalue"] > 0.1).sum() > 10
+            else True
+        )
+    )
+
     # Name for the stat
     name = stats_fp.name.replace(".csv", "")
     print(name)
@@ -94,37 +149,24 @@ for stats_fp in Path("stats/").rglob("*.csv"):
     # For the mu., make a volcano plot
     if name.startswith("mu.") or "${params.method}" == "wilcoxon":
 
+        # The statistical method used will impact the:
+        # - parsing of metric name from file name
+        # - variable used to show effect size
         if "${params.method}" == "wilcoxon":
             kw = name
+            effect_cname = "lfc"
+            effect_title = "Fold Change (log10)"
         else:
             kw = name[3:]
+            effect_cname = "est_coef"
+            effect_title = "Estimated Coefficient of Association"
 
         volcano_varm = kw + "_volcano"
-        ma_varm = kw + "_ma"
-        adata.varm[volcano_varm] = (
-            df
-            .query("neg_log10_pvalue > 0.1")
-            .rename(columns=dict(statistic="est_coef"))
-            .reindex(
-                columns=["est_coef", "neg_log10_pvalue"],
-                index=adata.var_names
-            )
-            .apply(scale_values)
-            .values
-        )
+        add_varm(adata, volcano_varm, df, [effect_cname, "neg_log10_pvalue"])
 
         # Also make an MA plot
-        adata.varm[ma_varm] = (
-            df
-            .query("neg_log10_pvalue > 0.1")
-            .rename(columns=dict(statistic="est_coef"))
-            .reindex(
-                columns=["est_coef", "mean_abund"],
-                index=adata.var_names
-            )
-            .apply(scale_values)
-            .values
-        )
+        ma_varm = kw + "_ma"
+        add_varm(adata, ma_varm, df, [effect_cname, "mean_abund"])
 
         # Sort the annotations for this visualization
         obs_sets.sort(
@@ -132,14 +174,28 @@ for stats_fp in Path("stats/").rglob("*.csv"):
         )
 
         # Set up the annotations for the variables
+        # (note: obsm is used instead of varm because
+        # the data will ultimately be transposed for viewing)
         var_sets = [
+            {
+                "name": "p-value",
+                "path": f"obsm/{name}/p_value"
+            },
+            {
+                "name": effect_title,
+                "path": f"obsm/{name}/{effect_cname}"
+            },
             {
                 "name": f"{kw}-Associated",
                 "path": f"obsm/{name}/sig_diff"
             },
             {
-                "name": "Mean Proportion (%)",
+                "name": "Average Abundance (%)",
                 "path": "obs/mean_proportion"
+            },
+            {
+                "name": "Proportion Detected (%)",
+                "path": "obs/mean_prevalence"
             }
         ]
 

@@ -46,10 +46,14 @@ def wilcoxon(
 
     res = stats.wilcoxon(grouped_values[0], grouped_values[1])
 
+    # Calculate the log-fold-change
+    lfc = np.mean(grouped_values[1]) - np.mean(grouped_values[0])
+
     return dict(
         org=org,
         p_value=res.pvalue,
         statistic=res.statistic,
+        lfc=lfc,
         metadata=formula_elem
     )
 

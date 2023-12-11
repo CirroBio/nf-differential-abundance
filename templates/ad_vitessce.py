@@ -97,7 +97,7 @@ def make_vt_config(kwargs):
                 "C": kwargs["ma_title"]
             },
             "embeddingZoom": {
-                "A": 3,
+                "A": 8,
                 "B": 8,
                 "C": 8
             },
