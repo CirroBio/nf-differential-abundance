@@ -80,3 +80,26 @@ Parameters:
 
 - `samplesheet`: URI to CSV with columns `sample` and `file`
 - `tax_level`: `'species'` by default
+
+### curatedMetagenomicData
+
+Script: `curatedMetagenomicData.nf`
+
+Input data is the `"*.relative_abundance` table output by the
+[`curatedMetagenomicDataTerminal` tool](https://github.com/waldronlab/curatedMetagenomicDataTerminal).
+
+> Note: It is strongly recommended to use the `--counts` flag so that the
+integer values can be used in the beta-binomial model used by corncob
+(which take into account sequencing depth information which is otherwise
+not available).
+
+Using the curatedMetagenomicData tool, input data is combined into a single
+table which includes both organism abundances and sample metadata.
+
+The workflow will split this data up before analysis, taking advantage of
+the pattern that organism abundances are formatted using the MetaPhlAn
+nomenclature (e.g. `s__Escherichia_coli`).
+
+Parameters:
+
+- `input`: URI to CSV with output from the curatedMetagenomicDataTerminal` tool

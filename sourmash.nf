@@ -2,15 +2,11 @@
 
 nextflow.enable.dsl=2
 
-// Use the same process to parse two different metrics
-// from the same set of output files
+// Read sourmash data
 include { read } from './modules/sourmash.nf'
-include { make_anndata } from './modules/make_anndata.nf' addParams(tool: 'sourmash')
 
-// Functions shared across input types
-include { corncob } from './modules/corncob.nf'
-include { wilcoxon } from './modules/wilcoxon.nf'
-include { viz } from './modules/viz.nf'
+// Shared workflow for running differential abundance analysis
+include { differential_abundance } from './modules/differential_abundance.nf' addParams(tool: 'sourmash')
 
 workflow {
     if(!params.samplesheet){
@@ -41,39 +37,12 @@ workflow {
     // Parse the pseudo read counts (total_weighted_hashes) and the proportional abundances
     read(input_ch)
 
-    if(params.method == "corncob"){
-
-        // Run corncob for stats
-        corncob(
-            read.out.counts,
-            read.out.taxonomy,
-            samplesheet
-        )
-        stats_output = corncob.out
-
-    } else {
-        if(params.method != "wilcoxon"){
-            error "Parameter 'method' not recognized: ${params.method}"
-        }
-        // Run wilcoxon for stats
-        wilcoxon(
-            read.out.proportions,
-            samplesheet
-        )
-        stats_output = wilcoxon.out
-
-    }
-
-    // Make an AnnData object with both proportions and counts
-    // as well as the stats results
-    make_anndata(
+    // Run the differential abundance analysis
+    differential_abundance(
         read.out.counts,
         read.out.proportions,
         read.out.taxonomy,
-        samplesheet,
-        stats_output
+        samplesheet
     )
 
-    // Make the visualization elements
-    viz(make_anndata.out)
 }

@@ -70,13 +70,18 @@ adata = AnnData(
         # Make sure that we're indexing on the sample column
         dat["samplesheet"]
         .reset_index()
+        .rename(columns=dict(sample_id="sample"))
         .set_index("sample")
         # Only take the samples which we have data for
         .reindex(
             index=dat["proportions"].index
         )
         .drop(
-            columns=["file"]
+            columns=(
+                ["file"]
+                if "file" in dat["samplesheet"].columns.values
+                else []
+            )
         )
     ),
     var=(
@@ -109,6 +114,7 @@ adata = adata[:, mask]
 
 # Color taxa that exceed the fdr_cutoff
 fdr_cutoff = float("${params.fdr_cutoff}")
+
 
 # Start building the list of elements for visualization
 config = dict()
@@ -170,7 +176,7 @@ for stats_fp in Path("stats/").rglob("*.csv"):
 
         # Sort the annotations for this visualization
         obs_sets.sort(
-            key=lambda d: d['name'] != kw
+            key=lambda d: f"{(d['name'] != kw) and (kw.startswith(d['name']) is False)}-{d['name']}"
         )
 
         # Set up the annotations for the variables

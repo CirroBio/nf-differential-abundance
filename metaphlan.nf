@@ -6,12 +6,9 @@ nextflow.enable.dsl=2
 // from the same set of output files
 include { read as read_counts } from './modules/metaphlan.nf' addParams(metric: 'estimated_number_of_reads_from_the_clade')
 include { read as read_prop } from './modules/metaphlan.nf' addParams(metric: 'relative_abundance')
-include { make_anndata } from './modules/make_anndata.nf' addParams(tool: 'metaphlan')
 
-// Functions shared across input types
-include { corncob } from './modules/corncob.nf'
-include { wilcoxon } from './modules/wilcoxon.nf'
-include { viz } from './modules/viz.nf'
+// Shared workflow for running differential abundance analysis
+include { differential_abundance } from './modules/differential_abundance.nf' addParams(tool: 'metaphlan')
 
 workflow {
     if(!params.samplesheet){
@@ -43,39 +40,12 @@ workflow {
     read_counts(input_ch)
     read_prop(input_ch)
 
-    if(params.method == "corncob"){
-
-        // Run corncob for stats
-        corncob(
-            read_counts.out.abund,
-            read_counts.out.taxonomy,
-            samplesheet
-        )
-        stats_output = corncob.out
-
-    } else {
-        if(params.method != "wilcoxon"){
-            error "Parameter 'method' not recognized: ${params.method}"
-        }
-        // Run wilcoxon for stats
-        wilcoxon(
-            read_counts.out.abund,
-            samplesheet
-        )
-        stats_output = wilcoxon.out
-
-    }
-
-    // Make an AnnData object with both proportions and counts
-    // as well as the stats results
-    make_anndata(
+    // Run the differential abundance analysis
+    differential_abundance(
         read_counts.out.abund,
         read_prop.out.abund,
-        read_prop.out.taxonomy,
-        samplesheet,
-        stats_output
+        read_counts.out.taxonomy,
+        samplesheet
     )
 
-    // Make the visualization elements
-    viz(make_anndata.out)
 }
