@@ -10,6 +10,7 @@ include { ad_metaphlan } from './modules/ad_metaphlan.nf'
 
 // Functions shared across input types
 include { corncob } from './modules/corncob.nf'
+include { wilcoxon } from './modules/wilcoxon.nf'
 include { viz } from './modules/viz.nf'
 
 workflow {
@@ -42,12 +43,28 @@ workflow {
     read_counts(input_ch)
     read_prop(input_ch)
 
-    // Run corncob for stats
-    corncob(
-        read_counts.out.abund,
-        read_counts.out.taxonomy,
-        samplesheet
-    )
+    if(params.method == "corncob"){
+
+        // Run corncob for stats
+        corncob(
+            read_counts.out.abund,
+            read_counts.out.taxonomy,
+            samplesheet
+        )
+        stats_output = corncob.out
+
+    } else {
+        if(params.method != "wilcoxon"){
+            error "Parameter 'method' not recognized: ${params.method}"
+        }
+        // Run wilcoxon for stats
+        wilcoxon(
+            read_counts.out.abund,
+            samplesheet
+        )
+        stats_output = wilcoxon.out
+
+    }
 
     // Make an AnnData object with both proportions and counts
     // as well as the stats results
@@ -56,7 +73,7 @@ workflow {
         read_prop.out.abund,
         read_prop.out.taxonomy,
         samplesheet,
-        corncob.out
+        stats_output
     )
 
     // Make the visualization elements

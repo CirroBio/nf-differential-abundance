@@ -73,7 +73,7 @@ adata = adata[:, mask]
 
 # Start building the list of elements for visualization
 config = dict()
-for stats_fp in Path("corncob/").rglob("*.csv"):
+for stats_fp in Path("stats/").rglob("*.csv"):
     # Read the table
     df = pd.read_csv(stats_fp, index_col=0)
     # Make the order match
@@ -92,13 +92,19 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
     print(adata.varm[name])
 
     # For the mu., make a volcano plot
-    if name.startswith("mu."):
-        kw = name[3:]
+    if name.startswith("mu.") or "${params.method}" == "wilcoxon":
+
+        if "${params.method}" == "wilcoxon":
+            kw = name
+        else:
+            kw = name[3:]
+
         volcano_varm = kw + "_volcano"
         ma_varm = kw + "_ma"
         adata.varm[volcano_varm] = (
             df
             .query("neg_log10_pvalue > 0.1")
+            .rename(columns=dict(statistic="est_coef"))
             .reindex(
                 columns=["est_coef", "neg_log10_pvalue"],
                 index=adata.var_names
@@ -111,6 +117,7 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
         adata.varm[ma_varm] = (
             df
             .query("neg_log10_pvalue > 0.1")
+            .rename(columns=dict(statistic="est_coef"))
             .reindex(
                 columns=["est_coef", "mean_abund"],
                 index=adata.var_names
@@ -165,5 +172,9 @@ for stats_fp in Path("corncob/").rglob("*.csv"):
 adata.write_h5ad("metaphlan.h5ad", compression="gzip")
 
 # Write out the list of variables for visualization
-with open("config.json", "w") as handle:
+with open("output_config.json", "w") as handle:
     json.dump(config, handle, indent=4)
+
+# Write out a short summary
+with open("metaphlan.h5ad.txt", "w") as handle:
+    handle.write(str(adata))

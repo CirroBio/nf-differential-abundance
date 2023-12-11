@@ -3,7 +3,7 @@ process vitessce {
     publishDir "${params.web_output}", mode: 'copy', overwrite: true
 
     input:
-        tuple path("adata.h5ad"), path("config.json")
+        tuple path("adata.h5ad"), path("input_config.json")
 
     output:
         path "*.zarr", hidden: true
@@ -18,10 +18,10 @@ process normalize {
     container "${params.container}"
 
     input:
-        tuple path("adata.h5ad"), path("config.json")
+        tuple path("adata.h5ad"), path("input_config.json")
 
     output:
-        tuple path("normalized.h5ad"), path("config.json")
+        tuple path("normalized.h5ad"), path("output_config.json")
 
     script:
     template "ad_normalize.py"
@@ -31,10 +31,10 @@ process sort {
     container "${params.container}"
 
     input:
-        tuple path("adata.h5ad"), path("config.json")
+        tuple path("adata.h5ad"), path("input_config.json")
 
     output:
-        tuple path("sorted.h5ad"), path("config.json")
+        tuple path("sorted.h5ad"), path("output_config.json")
 
     script:
     template "ad_sort.py"
@@ -44,10 +44,10 @@ process annotate {
     container "${params.container}"
 
     input:
-        tuple path("adata.h5ad"), path("config.json")
+        tuple path("adata.h5ad"), path("input_config.json")
 
     output:
-        tuple path("annotated.h5ad"), path("config.json")
+        tuple path("annotated.h5ad"), path("output_config.json")
 
     script:
     template "ad_annotate.py"

@@ -300,8 +300,10 @@ def make_vt_config(kwargs):
 
 
 # Read in each of the configurations
-with open("config.json", "r") as handle:
+with open("input_config.json", "r") as handle:
     config: dict = json.load(handle)
+
+print(config)
 
 for kw, elem in config.items():
     vt_config = make_vt_config(elem)

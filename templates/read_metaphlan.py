@@ -117,6 +117,9 @@ class ReadMetaphlan:
 
     @staticmethod
     def get_tax_level(clade_name):
+        if clade_name == "UNCLASSIFIED":
+            return
+
         mapping = dict(
             k="kingdom",
             p="phylum",

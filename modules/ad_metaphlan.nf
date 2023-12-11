@@ -7,10 +7,10 @@ process ad_metaphlan {
         path "proportions.csv"
         path "taxonomy.csv"
         path "samplesheet.csv"
-        path "corncob/"
+        path "stats/"
 
     output:
-        tuple path("metaphlan.h5ad"), path("config.json")
+        tuple path("metaphlan.h5ad"), path("output_config.json")
 
     script:
         template "ad_metaphlan.py"
