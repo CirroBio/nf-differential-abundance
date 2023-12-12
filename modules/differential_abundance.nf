@@ -1,7 +1,7 @@
 // Functions shared across input types
 include { make_anndata } from './make_anndata.nf'
 include { corncob } from './corncob.nf'
-include { wilcoxon } from './wilcoxon.nf'
+include { mannwhitneyu } from './mannwhitneyu.nf'
 include { viz } from './viz.nf'
 
 workflow differential_abundance {
@@ -25,15 +25,15 @@ workflow differential_abundance {
             stats_output = corncob.out
 
         } else {
-            if(params.method != "wilcoxon"){
+            if(params.method != "mannwhitneyu"){
                 error "Parameter 'method' not recognized: ${params.method}"
             }
-            // Run wilcoxon for stats
-            wilcoxon(
+            // Run mannwhitneyu for stats
+            mannwhitneyu(
                 proportions,
                 samplesheet
             )
-            stats_output = wilcoxon.out
+            stats_output = mannwhitneyu.out
 
         }
 

@@ -1,6 +1,6 @@
-process wilcoxon {
+process mannwhitneyu {
     container "${params.container}"
-    publishDir "${params.data_output}/wilcoxon/", mode: 'copy', overwrite: true
+    publishDir "${params.data_output}/mannwhitneyu/", mode: 'copy', overwrite: true
 
     input:
     path "counts.csv"
@@ -10,5 +10,5 @@ process wilcoxon {
     path "*.csv"
 
     script:
-    template "wilcoxon.py"
+    template "mannwhitneyu.py"
 }

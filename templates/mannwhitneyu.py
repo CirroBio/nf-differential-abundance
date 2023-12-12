@@ -22,7 +22,7 @@ metadata = pd.read_csv("metadata.csv", index_col=0)
 print(metadata)
 
 
-def wilcoxon(
+def mannwhitneyu(
     org: str,
     org_props: pd.Series,
     metadata: pd.DataFrame,
@@ -36,7 +36,7 @@ def wilcoxon(
         f"{kw} (n={n:,})"
         for kw, n in metadata_values.value_counts().items()
     ])
-    msg = f"Wilcoxon test only appropriate for two categories, not {vc}"
+    msg = f"mannwhitneyu test only appropriate for two categories, not {vc}"
     assert metadata_values.unique().shape[0] == 2, msg
 
     grouped_values = [
@@ -44,7 +44,7 @@ def wilcoxon(
         for _, vals in org_props.groupby(metadata_values)
     ]
 
-    res = stats.wilcoxon(grouped_values[0], grouped_values[1])
+    res = stats.mannwhitneyu(grouped_values[0], grouped_values[1])
 
     # Calculate the log-fold-change
     lfc = np.mean(grouped_values[1]) - np.mean(grouped_values[0])
@@ -59,7 +59,7 @@ def wilcoxon(
 
 
 results = pd.DataFrame([
-    wilcoxon(
+    mannwhitneyu(
         org,
         org_props,
         metadata,

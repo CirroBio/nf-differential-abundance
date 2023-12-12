@@ -153,12 +153,12 @@ for stats_fp in Path("stats/").rglob("*.csv"):
     print(adata.varm[name])
 
     # For the mu., make a volcano plot
-    if name.startswith("mu.") or "${params.method}" == "wilcoxon":
+    if name.startswith("mu.") or "${params.method}" == "mannwhitneyu":
 
         # The statistical method used will impact the:
         # - parsing of metric name from file name
         # - variable used to show effect size
-        if "${params.method}" == "wilcoxon":
+        if "${params.method}" == "mannwhitneyu":
             kw = name
             effect_cname = "lfc"
             effect_title = "Fold Change (log10)"

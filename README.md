@@ -12,11 +12,70 @@ input types.
 
 Parameters which are used in common across all input types.
 
-- `metadata`: CSV with sample metadata (required column name: `sample`)
 - `formula`: String like `"colA + colB"` used for statistical modeling
-- `method`: Statistical method used (options: `corncob` (default), `wilcoxon`)
+- `method`: Statistical method used (options: `corncob` (default), `mannwhitneyu`)
 - `data_output`: Output folder used for human-readable data
 - `web_output`: Output folder used for web-readable data
+
+### Microbial 16S (nf-core/ampliseq)
+
+Script: `ampliseq.nf`
+
+For the analysis of microbial 16S sequencing data, input files are expected to be
+formatted following the pattern used in the [nf-core/ampliseq](https://nf-co.re/ampliseq)
+workflow.
+
+**Counts Table (e.g. qiime2/abundance_tables/feature_table.tsv)**:
+
+Tab-delimited file with the number of counts for each ASV in each sample.
+
+```
+# Constructed from biom file
+#OTU ID	Sample1	Sample2	Sample3
+8e121f6e82f82d6e7e2f831b9ce9e75c	0.0	0.0	71.0
+22f4ee9a41a4d73580bf7ade8e9e017a	400.0	168.0	237.0
+2555ab896130cd0373de325088a94110	4.0	5.0	77.0
+b4ed8ec9d3313b1ae0b929812511444b	10.0	19.0	5.0
+70d55baf78e9ac4d0babeac5dcbae5c2	37.0	62.0	53.0
+2eedf896e95f02090d22dd3e68742ce7	64.0	30.0	147.0
+bc44453105cf321ef72daa44e95a16ab	0.0	14.0	0.0
+...
+```
+
+**Taxonomy Table (e.g. qiime2/taxonomy/taxonomy.tsv)**:
+
+Tab-delimited file with the taxonomic assignment for each ASV.
+
+```
+Feature ID	Taxon	Confidence
+c728ad6f5d183cb36fa06b6a3a47758b	d__Bacteria; p__Firmicutes; c__Clostridia; o__Oscillospirales; f__Ruminococcaceae; g__Faecalibacterium	0.9999993830869841
+bbae6ed124f4d6b48435a964a95c8418	d__Bacteria; p__Firmicutes; c__Clostridia; o__Oscillospirales; f__Ruminococcaceae; g__Faecalibacterium	0.9999984489550084
+22f4ee9a41a4d73580bf7ade8e9e017a	d__Bacteria; p__Firmicutes; c__Clostridia; o__Oscillospirales; f__Ruminococcaceae; g__Faecalibacterium	0.9999973729608546
+ec6c9233b72090035eb87c6ff39a84a7	d__Bacteria; p__Bacteroidota; c__Bacteroidia; o__Bacteroidales; f__Bacteroidaceae; g__Bacteroides; s__Bacteroides_coprocola	0.9999852779388605
+8d478879084ed7c88660c8b0c4b24923	d__Bacteria; p__Firmicutes; c__Clostridia; o__Oscillospirales; f__Ruminococcaceae	0.999599801457001
+b264ac8ff5f9aff74f0b9aa084d9a9f0	d__Bacteria; p__Firmicutes; c__Clostridia; o__Lachnospirales; f__Lachnospiraceae; g__Agathobacter	0.9911833494102088
+b6a1cfc87c3ffa7f96227d4a372d8dd7	d__Bacteria; p__Firmicutes; c__Clostridia; o__Oscillospirales; f__Ruminococcaceae; g__Subdoligranulum; s__uncultured_bacterium	0.7169473785430964
+...
+```
+
+**Metadata Table**:
+
+Comma-delimited file with the metadata information assigned to each sample.
+This information is used for the `formula` parameter and statistical modeling.
+
+```
+sample,batch
+Sample1,1
+Sample2,1
+Sample3,2
+Sample4,2
+```
+
+Parameters:
+
+- `counts`: URI to counts table
+- `taxonomy`: URI to taxonomy table
+- `metadata`: URI to metadata table
 
 ### MetaPhlAn
 
@@ -47,7 +106,7 @@ k__Bacteria|p__Firmicutes|c__Bacilli|o__Bacillales|f__Bacillaceae|g__Bacillus|s_
 
 Parameters:
 
-- `samplesheet`: URI to CSV with columns `sample` and `file`
+- `samplesheet`: URI to CSV with columns `sample` and `file`, and any additional metadata columns used for the `formula`
 - `tax_level`: `'species'` by default
 
 ### Sourmash
@@ -78,7 +137,7 @@ SRR26891235,species,0.45024195245108356,unclassified,5ad71395,inputs/SRR26891235
 
 Parameters:
 
-- `samplesheet`: URI to CSV with columns `sample` and `file`
+- `samplesheet`: URI to CSV with columns `sample` and `file`, and any additional metadata columns used for the `formula`
 - `tax_level`: `'species'` by default
 
 ### curatedMetagenomicData
