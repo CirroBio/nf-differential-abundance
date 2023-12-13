@@ -16,12 +16,14 @@ process vitessce {
 
 process normalize {
     container "${params.container}"
+    publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
         tuple path("adata.h5ad"), path("input_config.json")
 
     output:
         tuple path("normalized.h5ad"), path("output_config.json")
+        path "*.log"
 
     script:
     template "ad_normalize.py"
@@ -29,12 +31,14 @@ process normalize {
 
 process sort {
     container "${params.container}"
+    publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
         tuple path("adata.h5ad"), path("input_config.json")
 
     output:
         tuple path("sorted.h5ad"), path("output_config.json")
+        path "*.log"
 
     script:
     template "ad_sort.py"
@@ -42,12 +46,14 @@ process sort {
 
 process annotate {
     container "${params.container}"
+    publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
         tuple path("adata.h5ad"), path("input_config.json")
 
     output:
         tuple path("annotated.h5ad"), path("output_config.json")
+        path "*.log"
 
     script:
     template "ad_annotate.py"
@@ -58,9 +64,8 @@ workflow viz {
         anndata
 
     main:
-        anndata \
-        | normalize \
-        | sort \
-        | annotate \
-        | vitessce
+        normalize(anndata)
+        sort(normalize.out[0])
+        annotate(sort.out[0])
+        vitessce(annotate.out[0])
 }

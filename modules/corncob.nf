@@ -1,5 +1,6 @@
 process run_corncob {
     container "${params.container__corncob}"
+    publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
     path "counts.csv"
@@ -7,7 +8,8 @@ process run_corncob {
     path "metadata.csv"
 
     output:
-    path "corncob_results.csv"
+    path "corncob_results.csv", emit: csv
+    path "*.log", emit: log
 
     script:
     template "run_corncob.R"
@@ -15,13 +17,15 @@ process run_corncob {
 
 process split_corncob {
     container "${params.container}"
-    publishDir "${params.data_output}/corncob/", mode: 'copy', overwrite: true
+    publishDir "${params.data_output}/corncob/", mode: 'copy', overwrite: true, pattern: "*.csv"
+    publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
         path "corncob_results.csv"
 
     output:
-        path "*.csv"
+        path "*.csv", emit: csv
+        path "*.log", emit: log
 
     script:
     template "split_corncob.py"
@@ -41,9 +45,9 @@ workflow corncob {
         )
 
         split_corncob(
-            run_corncob.out
+            run_corncob.out.csv
         )
 
     emit:
-    split_corncob.out
+        split_corncob.out.csv
 }

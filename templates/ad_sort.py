@@ -3,16 +3,33 @@
 import json
 import anndata as ad
 from scipy.cluster import hierarchy
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
+
 
 # Read in the configuration
 with open("input_config.json", "r") as handle:
     config: dict = json.load(handle)
-print("Read in configuration")
-print(json.dumps(config, indent=4))
+log("Read in configuration")
+log(json.dumps(config, indent=4))
 
-print("Reading")
+log("Reading")
 adata = ad.read_h5ad("adata.h5ad")
-print(adata)
+log(str(adata))
 
 
 # Sort features and observations
@@ -29,16 +46,16 @@ def sort(adata: ad.AnnData):
     ].copy()
 
 
-print("Sorting observations")
+log("Sorting observations")
 adata = sort(adata)
-print("Sorting features")
+log("Sorting features")
 adata = sort(adata.copy().T).T
 
 # Write out the sorted dataset
 adata.write_h5ad("sorted.h5ad")
 
 # Write out the updated configuration
-print("Writing out configuration")
-print(json.dumps(config, indent=4))
+log("Writing out configuration")
+log(json.dumps(config, indent=4))
 with open("output_config.json", "w") as handle:
     json.dump(config, handle, indent=4)

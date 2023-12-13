@@ -2,6 +2,23 @@
 
 import json
 import pandas as pd
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
+
 
 levels = [
     "kingdom",
@@ -15,16 +32,16 @@ levels = [
 
 
 def read_table(fp, **kwargs) -> pd.DataFrame:
-    print(f"Reading in: {fp}")
+    log(f"Reading in: {fp}")
     df = pd.read_csv(fp, **kwargs)
-    print(df.to_csv())
+    log(df.head().to_csv())
     return df
 
 
 if __name__ == "__main__":
 
     # Read in the table of abundances
-    print("Parsing params.read_kwargs")
+    log("Parsing params.read_kwargs")
     read_kwargs = json.loads('${params.read_kwargs}')
     counts = read_table("${abund}", **read_kwargs)
     counts.index.names = ['sample']
@@ -39,9 +56,9 @@ if __name__ == "__main__":
         set(metadata.index.values)
     )
     shared_samples.sort()
-    print(f"Samples with metadata: {metadata.shape[0]:,}")
-    print(f"Samples with counts: {counts.shape[0]:,}")
-    print(f"Samples shared: {len(shared_samples):,}")
+    log(f"Samples with metadata: {metadata.shape[0]:,}")
+    log(f"Samples with counts: {counts.shape[0]:,}")
+    log(f"Samples shared: {len(shared_samples):,}")
 
     assert len(shared_samples) > 1
 
@@ -56,8 +73,8 @@ if __name__ == "__main__":
         }
         for feature in counts.columns.values
     ]).set_index("name")
-    print("Dummy taxonomy")
-    print(taxonomy.to_csv())
+    log("Dummy taxonomy")
+    log(taxonomy.head().to_csv())
 
     # Write out files
     metadata.reindex(index=shared_samples).to_csv("samplesheet.csv")

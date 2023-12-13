@@ -33,7 +33,7 @@ workflow differential_abundance {
                 proportions,
                 samplesheet
             )
-            stats_output = mannwhitneyu.out
+            stats_output = mannwhitneyu.out.csv
 
         }
 
@@ -48,6 +48,6 @@ workflow differential_abundance {
         )
 
         // Make the visualization elements
-        viz(make_anndata.out)
+        viz(make_anndata.out[0])
 
 }

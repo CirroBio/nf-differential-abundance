@@ -87,3 +87,4 @@ write.table(
   row.names = FALSE
 )
 print("Done")
+file.copy(".command.log", "${task.process}.log")

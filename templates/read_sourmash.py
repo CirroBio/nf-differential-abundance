@@ -3,10 +3,24 @@
 import pandas as pd
 import logging
 
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
+
 
 class ReadSourmash:
 
-    logger: logging.Logger
     levels = [
         'kingdom',
         'phylum',
@@ -18,37 +32,26 @@ class ReadSourmash:
     ]
 
     def __init__(self):
-        self.setup_logger()
         self.get_args()
         self.read_abund()
         self.write_abund("bp_match_at_rank", "counts")
         self.write_abund("f_weighted_at_rank", "proportions")
         self.write_taxonomy()
 
-    def setup_logger(self):
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.INFO)
-        console_handler = logging.StreamHandler()
-        log_formatter = logging.Formatter(
-            '%(asctime)s %(levelname)-8s [ReadSourmash] %(message)s'
-        )
-        console_handler.setFormatter(log_formatter)
-        self.logger.addHandler(console_handler)
-
     def get_args(self):
 
         self.path = "${file}"
-        self.logger.info(f"Reading from {self.path}")
+        log(f"Reading from {self.path}")
 
         self.name = "${sample}"
-        self.logger.info(f"Name: {self.name}")
+        log(f"Name: {self.name}")
 
         self.tax_level = "${params.tax_level}"
-        self.logger.info(f"Taxonomic level: {self.tax_level}")
+        log(f"Taxonomic level: {self.tax_level}")
 
     def write_taxonomy(self):
         # Format the taxonomy table
-        self.logger.info("Formatting taxonomy")
+        log("Formatting taxonomy")
         tax = pd.DataFrame([
             self.parse_taxonomy(tax_string)
             for tax_string in self.abund["lineage"].values
@@ -62,7 +65,7 @@ class ReadSourmash:
             )
         )
         # Write out the taxonomy table
-        self.logger.info("Writing out to taxonomy.csv")
+        log("Writing out to taxonomy.csv")
         tax.to_csv("taxonomy.csv")
 
     def parse_taxonomy(self, tax_string):
@@ -82,11 +85,11 @@ class ReadSourmash:
 
         # Read the table of abundances
         self.abund = pd.read_csv(self.path)
-        self.logger.info(f"Read in {self.abund.shape[0]:,} lines")
+        log(f"Read in {self.abund.shape[0]:,} lines")
 
         # Filter to the specified level
         self.abund = self.abund.query(f"rank == '{self.tax_level}'")
-        self.logger.info(f"Filtered down to {self.abund.shape[0]:,} lines")
+        log(f"Filtered down to {self.abund.shape[0]:,} lines")
 
         # Just get the columns of interest
         self.abund = self.abund.reindex(
@@ -121,7 +124,7 @@ class ReadSourmash:
 
     def write_abund(self, metric, suffix):
         output_fp = f"{self.name}.{suffix}.csv"
-        self.logger.info(f"Writing out to {output_fp}")
+        log(f"Writing out to {output_fp}")
         # Only write out the final organism name
         (
             self.abund

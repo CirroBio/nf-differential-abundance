@@ -5,6 +5,22 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from pathlib import Path
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
 
 
 # Scale values from -0.5 to 0.5
@@ -21,9 +37,9 @@ def add_varm(
     df: pd.DataFrame,
     cnames: list
 ):
-    print(f"Preparing to add the {kw} table")
-    print(df.to_csv())
-    print(f"Using columns: {', '.join(cnames)}")
+    log(f"Preparing to add the {kw} table")
+    log(df.head().to_csv())
+    log(f"Using columns: {', '.join(cnames)}")
 
     # Filter on the 'show' column
     assert "show" in df.columns.values
@@ -59,9 +75,10 @@ dat = {
 }
 
 for kw, df in dat.items():
-    print(kw)
-    print(df.head())
-    print(df.shape)
+    log(kw)
+    log(df.head().to_csv())
+    log(f"Rows: {df.shape[0]:,}")
+    log(f"Columns: {df.shape[1]:,}")
 
 # Make an AnnData object
 adata = AnnData(
@@ -107,9 +124,9 @@ obs_sets = [
 
 # Filter by minimum abundance
 min_abund = float("${params.min_abund}")
-print(f"Minimum abundance threshold: {min_abund}")
+log(f"Minimum abundance threshold: {min_abund}")
 mask = adata.to_df().max() > min_abund
-print(f"Filtering to {mask.sum():,} / {mask.shape[0]:,} taxa")
+log(f"Filtering to {mask.sum():,} / {mask.shape[0]:,} taxa")
 adata = adata[:, mask]
 
 # Color taxa that exceed the fdr_cutoff
@@ -147,10 +164,9 @@ for stats_fp in Path("stats/").rglob("*.csv"):
 
     # Name for the stat
     name = stats_fp.name.replace(".csv", "")
-    print(name)
+    log(name)
     # Save the whole table
     adata.varm[name] = df
-    print(adata.varm[name])
 
     # For the mu., make a volcano plot
     if name.startswith("mu.") or "${params.method}" == "mannwhitneyu":

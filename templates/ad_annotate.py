@@ -1,18 +1,35 @@
 #!/usr/bin/env python3
 
-import json
 import anndata as ad
-import scanpy as sc
+import json
+import logging
 import pandas as pd
+import scanpy as sc
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
+
 
 adata = ad.read_h5ad("adata.h5ad")
-print(adata)
+log(str(adata))
 
 # Read in the configuration
 with open("input_config.json", "r") as handle:
     config: dict = json.load(handle)
-print("Read in configuration")
-print(json.dumps(config, indent=4))
+log("Read in configuration")
+log(json.dumps(config, indent=4))
 
 
 # Scale values from -0.5 to 0.5
@@ -26,7 +43,7 @@ def update_ordination_path(kw, title):
     path = f"obsm/X_{kw}"
     # Skip if there aren't enough dimensions to plot
     if adata.obsm[f"X_{kw}"].shape[1] < 2:
-        print(f"Skipping {kw} - not enough dimensions")
+        log(f"Skipping {kw} - not enough dimensions")
 
     # Scale the values
     adata.obsm[f"X_{kw}"] = (
@@ -35,8 +52,8 @@ def update_ordination_path(kw, title):
         .values
     )
 
-    print(f"Setting ordination to use {path}")
-    print(adata.obsm[f"X_{kw}"])
+    log(f"Setting ordination to use {path}")
+    log(str(adata.obsm[f"X_{kw}"]))
     for kw in config.keys():
         config[kw]["ordination_path"] = path
         config[kw]["ordination_title"] = title
@@ -44,23 +61,23 @@ def update_ordination_path(kw, title):
 
 # Run t-SNE, UMAP, and PCA ordination
 # Use a try/except pattern in case individual ones fail
-print("Ordinating with PCA")
+log("Ordinating with PCA")
 sc.tl.pca(adata)
 update_ordination_path("pca", "PCA")
 
 # UMAP
-print("Ordinating with UMAP")
+log("Ordinating with UMAP")
 metric = 'braycurtis'
 try:
     sc.pp.neighbors(adata, use_rep='X', metric=metric)
     sc.tl.umap(adata)
     update_ordination_path("umap", "UMAP")
 except Exception as e:
-    print("Skipping UMAP")
-    print(str(e))
+    log("Skipping UMAP")
+    log(str(e))
 
 #  t-SNE
-print("Ordinating with t-SNE")
+log("Ordinating with t-SNE")
 try:
     sc.pp.neighbors(adata, use_rep='X', metric=metric)
     sc.tl.tsne(
@@ -71,14 +88,14 @@ try:
     )
     update_ordination_path("tsne", "t-SNE")
 except Exception as e:
-    print("Skipping t-SNE")
-    print(str(e))
+    log("Skipping t-SNE")
+    log(str(e))
 
 # Write out the annotated dataset
 adata.write_h5ad("annotated.h5ad")
 
 # Write out the updated configuration
-print("Writing out configuration")
-print(json.dumps(config, indent=4))
+log("Writing out configuration")
+log(json.dumps(config, indent=4))
 with open("output_config.json", "w") as handle:
     json.dump(config, handle, indent=4)

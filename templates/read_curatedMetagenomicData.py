@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 
+import json
 from typing import Tuple
 import pandas as pd
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
 
 
 def split_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -31,19 +48,19 @@ def is_counts(abunds) -> bool:
 
 def main():
 
-    print("Reading in full table")
+    log("Reading in full table")
     df = pd.read_csv("input.csv", sep="\t", index_col=0)
-    print(df)
+    log(df.head().to_csv())
 
-    print("Splitting metadata and abundances")
+    log("Splitting metadata and abundances")
     metadata, abunds = split_data(df)
 
-    print("Writing out the sample metadata")
+    log("Writing out the sample metadata")
     metadata.to_csv("samplesheet.csv")
 
     abunds, taxonomy = filter_tax_level(abunds)
 
-    print("Making counts and proportions")
+    log("Making counts and proportions")
     counts, proportions = make_counts_proportions(abunds)
 
     for df, kw in [
@@ -51,8 +68,8 @@ def main():
         (proportions, "proportions"),
         (taxonomy, "taxonomy")
     ]:
-        print(f"Writing out {kw} table")
-        print(df)
+        log(f"Writing out {kw} table")
+        log(df.head().to_csv())
         df.to_csv(f"{kw}.csv")
 
 
@@ -61,31 +78,31 @@ def filter_tax_level(abunds: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     tax_level = "${params.tax_level}"
 
     # Make a table with the taxonomy for each organism
-    print("Parsing taxonomy")
+    log("Parsing taxonomy")
     taxonomy = pd.DataFrame([
         parse_tax_string(tax_string)
         for tax_string in abunds.columns.values
     ]).set_index("lineage")
-    print(taxonomy)
-    print(taxonomy["level"].value_counts())
+    log(taxonomy.head().to_csv())
+    log(json.dumps(taxonomy["level"].value_counts().to_dict(), indent=4))
 
     # Filter to the indicated level
-    print(f"Filtering to {tax_level} level")
+    log(f"Filtering to {tax_level} level")
     taxonomy = taxonomy.query(f"level == '{tax_level}'")
-    print(taxonomy)
+    log(taxonomy.head().to_csv())
     assert taxonomy.shape[0] > 0, "No organisms detected at this level"
 
     # Filter the abundance information as well
     abunds = abunds.reindex(columns=taxonomy.index.values)
-    print("Filtered abundances")
-    print(abunds)
+    log("Filtered abundances")
+    log(abunds.head().to_csv())
 
     # Rename the abundances for the organism name
     abunds = abunds.rename(
         columns=taxonomy[tax_level]
     )
-    print("Renamed abundances")
-    print(abunds)
+    log("Renamed abundances")
+    log(abunds.head().to_csv())
 
     # Rename the taxonomy for the specified level
     taxonomy = (
@@ -93,8 +110,8 @@ def filter_tax_level(abunds: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         .reset_index(drop=True)
         .set_index("name")
     )
-    print("Reformatted the taxonomy")
-    print(taxonomy)
+    log("Reformatted the taxonomy")
+    log(taxonomy.head().to_csv())
 
     return abunds, taxonomy
 
@@ -138,19 +155,19 @@ def parse_tax_string(lineage: str) -> dict:
 
 def make_counts_proportions(abunds) -> Tuple[pd.DataFrame, pd.DataFrame]:
     if is_counts(abunds):
-        print("Input data appears to be counts")
-        print("Calculating proportions")
+        log("Input data appears to be counts")
+        log("Calculating proportions")
         proportions = abunds.apply(lambda r: r / r.sum(), axis=1)
         counts = abunds
-        print(proportions)
+        log(proportions.head().to_csv())
     else:
-        print("Input data appears to be proportions")
-        print("Estimating counts")
+        log("Input data appears to be proportions")
+        log("Estimating counts")
         counts = abunds.apply(
             lambda r: (r / r[r > 0].min()).apply(int), axis=1
         )
 
-        print(counts)
+        log(counts.head().to_csv())
         proportions = abunds.apply(
             lambda r: r / r.sum(), axis=1
         )

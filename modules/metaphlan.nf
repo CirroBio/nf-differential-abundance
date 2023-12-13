@@ -9,6 +9,7 @@ include { join_taxonomy } from "./join_taxonomy.nf" addParams(
 
 process parse {
     container "${params.container}"
+    publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
     tuple val(sample), path(file)
@@ -16,6 +17,7 @@ process parse {
     output:
     path "${sample}.csv", emit: abund
     path "taxonomy.csv", emit: taxonomy
+    path "*.log", emit: log
 
     script:
     template "read_metaphlan.py"

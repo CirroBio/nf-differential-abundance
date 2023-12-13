@@ -3,11 +3,28 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
+
 
 counts = pd.read_csv("counts.csv", index_col=0)
-print(counts)
+log(counts.head().to_csv())
 
-print("Calculating CLR")
+log("Calculating CLR")
 
 
 def clr(r: pd.Series):
@@ -16,10 +33,10 @@ def clr(r: pd.Series):
 
 
 props = counts.apply(clr, axis=1)
-print(props)
+log(props.head().to_csv())
 
 metadata = pd.read_csv("metadata.csv", index_col=0)
-print(metadata)
+log(metadata.head().to_csv())
 
 
 def mannwhitneyu(
@@ -70,7 +87,7 @@ results = pd.DataFrame([
 ])
 results.set_index("org", inplace=True)
 
-print(results)
+log(results.head().to_csv())
 
 for metadata, df in results.groupby("metadata"):
     df.to_csv(f"{metadata}.csv")

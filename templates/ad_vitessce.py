@@ -303,6 +303,7 @@ def make_vt_config(kwargs):
 with open("input_config.json", "r") as handle:
     config: dict = json.load(handle)
 
+print("Loading configuration")
 print(config)
 
 # Keep a list of all of the files which have been written

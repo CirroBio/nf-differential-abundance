@@ -2,6 +2,23 @@
 
 import pandas as pd
 from typing import Tuple
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("${task.process}.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
+def log(s: str):
+    for line in s.split("\\n"):
+        logging.info(line)
+
 
 mapping = dict(
     d="kingdom",
@@ -15,9 +32,9 @@ mapping = dict(
 
 
 def read_table(fp, **kwargs) -> pd.DataFrame:
-    print(f"Reading in: {fp}")
+    log(f"Reading in: {fp}")
     df = pd.read_csv(fp, **kwargs)
-    print(df.to_csv())
+    log(df.head().to_csv())
     return df
 
 
@@ -44,8 +61,8 @@ def read_taxonomy() -> pd.DataFrame:
         columns='rank',
         values='name'
     )
-    print("Reformatted taxonomy")
-    print(taxonomy.to_csv())
+    log("Reformatted taxonomy")
+    log(taxonomy.head().to_csv())
     return taxonomy
 
 
@@ -84,7 +101,7 @@ def merge_counts(
     taxonomy: pd.DataFrame
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     tax_level = "${params.tax_level}"
-    print(f"Merging counts by {tax_level}")
+    log(f"Merging counts by {tax_level}")
     assert tax_level in taxonomy.columns.values, taxonomy.columns.values
 
     counts = (
@@ -98,7 +115,7 @@ def merge_counts(
         .sum()
         .sort_index()
     )
-    print(counts.to_csv())
+    log(counts.head().to_csv())
 
     # Do the same thing for the taxonomy
     taxonomy = (
@@ -128,9 +145,9 @@ if __name__ == "__main__":
         set(metadata.index.values)
     )
     shared_samples.sort()
-    print(f"Samples with metadata: {metadata.shape[0]:,}")
-    print(f"Samples with counts: {counts.shape[1]:,}")
-    print(f"Samples shared: {len(shared_samples):,}")
+    log(f"Samples with metadata: {metadata.shape[0]:,}")
+    log(f"Samples with counts: {counts.shape[1]:,}")
+    log(f"Samples shared: {len(shared_samples):,}")
 
     assert len(shared_samples) > 1
 
