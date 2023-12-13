@@ -162,3 +162,40 @@ nomenclature (e.g. `s__Escherichia_coli`).
 Parameters:
 
 - `input`: URI to CSV with output from the curatedMetagenomicDataTerminal` tool
+
+### Relative Abundance Table
+
+Script: `table.nf`
+
+Arbitrary inputs can be processed from any tabular data file.
+The relative abundance information must be in a single CSV file in which:
+
+- Rectangular table including a header row and index column
+- Each column contains a sample (observation)
+- Each row contains a feature (species, metabolite, gene, etc.)
+- Each cell contains a numeric value (integer or float)
+
+| index    | sampleA | sampleB | sampleC |
+| -------- | ------- | ------- | ------- |
+| species1 | 0.1     | 0.08    | 0.15    |
+| species2 | 0.85    | 0.72    | 0.68    |
+| species3 | 0.05    | 0.20    | 0.17    |
+
+> Note: While the example table shows proportional values which add up to 1
+for each sample, there is no such requirement or expectation for this data type.
+
+In addition, a metadata file must be provided which contains
+the columns of data which are used in the `formula` input.
+The values in the first column of the metadata table must match the
+sample identifiers listed in the first column of the relative abundance table.
+
+Parameters:
+
+- `input`: Path to relative abundance table
+- `metadata`: Path to metadata table
+- `read_kwargs`: Any additional keyword arguments which should be provided
+to `pandas.read_csv` as JSON (default: `'{"sep": ",", "index_col": 0}'`) for reading the
+`input` file
+
+> Note that while a CSV input is expected, TSV inputs can be parsed by
+supplying `read_kwargs`: `'{"sep": "\t,", "index_col": 0}'`
