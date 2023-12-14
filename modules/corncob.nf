@@ -9,7 +9,7 @@ process run_corncob {
 
     output:
     path "corncob_results.csv", emit: csv
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "run_corncob.R"
@@ -25,7 +25,7 @@ process split_corncob {
 
     output:
         path "*.csv", emit: csv
-        path "*.log", emit: log
+        path "*.log", emit: log, optional: true
 
     script:
     template "split_corncob.py"
