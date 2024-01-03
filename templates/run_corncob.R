@@ -70,9 +70,9 @@ reformat_dv <- function(m, n){
 res <- do.call(
   rbind,
   lapply(
-    c(seq_len(ncol(read_counts))),
+    c(seq_len(length(dv_analysis\$all_models))),
     function(i){
-      reformat_dv(dv_analysis\$all_models[[i]], colnames(read_counts)[i])
+      reformat_dv(dv_analysis\$all_models[[i]], names(dv_analysis\$p)[i])
     }
   )
 )
