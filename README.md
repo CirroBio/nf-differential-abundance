@@ -199,3 +199,28 @@ to `pandas.read_csv` as JSON (default: `'{"sep": ",", "index_col": 0}'`) for rea
 
 > Note that while a CSV input is expected, TSV inputs can be parsed by
 supplying `read_kwargs`: `'{"sep": "\t,", "index_col": 0}'`
+
+
+### gig-map/align_reads.nf
+
+script: `gig_map_align_reads.nf`
+
+Gene-level read counts can be processed from the output of the
+[gig-map](https://github.com/FredHutch/gig-map) workfow, specifically
+using the `align_reads.nf` workflow.
+The output of that workflow is the `read_alignments.csv.gz` file, which can
+be used as the `input` to this workflow.
+
+Samples are identified in the `specimen` column in that file.
+However, the expected `metadata` file will use the `sample` column header
+to align with the behavior of the other entrypoints in this repository.
+
+Parameters:
+
+- `input`: Path to `read_alignment.csv.gz` produced by `gig-map/align_reads.nf`
+- `metadata`: Path to metadata file (with a `sample` column)
+- `min_coverage`: Minimum gene coverage to use for inclusion (range: 0-1, default: 0.75)
+- `use_unaligned`: If `true`, calculate the proportional abundance of each gene as the fraction
+of reads aligning to that gene divided by the total number of reads collected from the specimen.
+If `false` (by default), use the total number of reads which align to any gene in this analysis
+as the denominator instead.
