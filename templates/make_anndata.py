@@ -6,6 +6,7 @@ import pandas as pd
 from anndata import AnnData
 from pathlib import Path
 import logging
+import plotly.express as px
 
 # Set up logging
 logging.basicConfig(
@@ -41,6 +42,21 @@ def add_varm(
     log(df.head().to_csv())
     log(f"Using columns: {', '.join(cnames)}")
 
+    # Make a scatterplot
+    fig = px.scatter(
+        data_frame=df.reset_index(),
+        x=cnames[0],
+        y=cnames[1],
+        hover_name=df.index.name,
+        hover_data=df.columns.values,
+        title=kw
+    )
+    fig.update_layout(
+        plot_bgcolor='rgba(0, 0, 0, 0)',
+        paper_bgcolor='rgba(0, 0, 0, 0)'
+    )
+    fig.write_html(f"{kw}.html")
+
     # Filter on the 'show' column
     assert "show" in df.columns.values
     df = df.query("show")
@@ -60,7 +76,8 @@ def add_varm(
     assert df.shape[0] > 0
     assert df.dropna().shape[0] > 0, df.to_csv()
 
-    adata.varm[kw] = df.values
+    adata.varm[kw] = df
+    adata.uns[f"varm_cnames_{kw}"] = df.columns.values
 
 
 # Read in global config elements
@@ -167,6 +184,7 @@ for stats_fp in Path("stats/").rglob("*.csv"):
     log(name)
     # Save the whole table
     adata.varm[name] = df
+    adata.uns[f"varm_cnames_{name}"] = df.columns.values
 
     # For the mu., make a volcano plot
     if name.startswith("mu.") or "${params.method}" == "mannwhitneyu":

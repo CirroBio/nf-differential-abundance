@@ -47,6 +47,8 @@ process sort {
 process annotate {
     container "${params.container}"
     publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
+    publishDir "${params.data_output}/anndata/", mode: 'copy', overwrite: true, pattern: "*.h5ad"
+    publishDir "${params.data_output}/csv/", mode: 'copy', overwrite: true, pattern: "*.csv"
 
     input:
         tuple path("adata.h5ad"), path("input_config.json")
@@ -54,6 +56,7 @@ process annotate {
     output:
         tuple path("annotated.h5ad"), path("output_config.json")
         path "*.log"
+        path "*.csv"
 
     script:
     template "ad_annotate.py"

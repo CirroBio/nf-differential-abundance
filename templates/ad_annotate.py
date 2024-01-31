@@ -94,6 +94,21 @@ except Exception as e:
 # Write out the annotated dataset
 adata.write_h5ad("annotated.h5ad")
 
+# Write out CSVs with each element
+adata.obs.to_csv("output.obs.csv")
+adata.var.to_csv("output.var.csv")
+for kw in adata.varm:
+    pd.DataFrame(
+        adata.varm[kw],
+        index=adata.var_names,
+        columns=adata.uns.get(
+            f"varm_cnames_{kw}",
+            range(adata.varm[kw].shape[1])
+        )
+    ).to_csv(f"output.{kw}.csv")
+for layer in adata.layers:
+    adata.to_df(layer).to_csv(f"output.{layer}.csv")
+
 # Write out the updated configuration
 log("Writing out configuration")
 log(json.dumps(config, indent=4))
