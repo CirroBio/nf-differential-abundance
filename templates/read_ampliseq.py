@@ -56,7 +56,8 @@ def read_taxonomy() -> pd.DataFrame:
         )
         for asv, tax_string in taxonomy["Taxon"].items()
         for rank, name in parse_tax_string(tax_string)
-    ]).pivot(
+    ]).dropna(
+    ).pivot(
         index='asv',
         columns='rank',
         values='name'
@@ -70,15 +71,21 @@ def parse_tax_string(tax_string: str):
 
     for taxon in tax_string.split(";"):
         taxon = taxon.strip()
-        assert taxon[1:3] == "__", taxon
-        assert taxon[0] in mapping, taxon
-        yield mapping[taxon[0]], taxon[3:]
+        if taxon == "Unassigned":
+            yield None, None
+        else:
+            assert taxon[1:3] == "__", taxon
+            assert taxon[0] in mapping, taxon
+            yield mapping[taxon[0]], taxon[3:]
 
 
 def read_metadata() -> pd.DataFrame:
 
     return (
         read_table("metadata.csv")
+        .assign(
+            sample=lambda d: d["sample"].apply(lambda s: s.replace("-", "_"))
+        )
         .set_index("sample")
     )
 

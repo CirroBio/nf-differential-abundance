@@ -52,7 +52,8 @@ dv_analysis <- differentialTest(
   data = phy,
   test = "LRT",
   boot = FALSE,
-  fdr_cutoff = ${params.fdr_cutoff}
+  fdr_cutoff = ${params.fdr_cutoff},
+  taxa_are_rows=TRUE
 )
 
 reformat_dv <- function(m, n){
