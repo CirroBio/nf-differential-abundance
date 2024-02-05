@@ -42,7 +42,7 @@ workflow read {
     join_taxonomy(parse.out.taxonomy.toSortedList())
 
     emit:
-    counts = join_counts.out
-    proportions = join_proportions.out
+    counts = join_counts.out.csv
+    proportions = join_proportions.out.csv
     taxonomy = join_taxonomy.out
 }

@@ -35,7 +35,7 @@ workflow read {
     join_taxonomy(parse.out.taxonomy.toSortedList())
 
     emit:
-    abund = join_abund.out
-    taxonomy = join_taxonomy.out
+    abund = join_abund.out.csv
+    taxonomy = join_taxonomy.out.csv
 
 }
