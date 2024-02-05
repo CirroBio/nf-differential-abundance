@@ -9,7 +9,7 @@ process mannwhitneyu {
 
     output:
     path "*.csv", emit: csv
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "mannwhitneyu.py"

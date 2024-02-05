@@ -17,7 +17,7 @@ process parse {
     output:
     path "${sample}.csv", emit: abund
     path "taxonomy.csv", emit: taxonomy
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "read_metaphlan.py"

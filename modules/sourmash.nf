@@ -23,7 +23,7 @@ process parse {
     path "${sample}.counts.csv", emit: counts
     path "${sample}.proportions.csv", emit: proportions
     path "taxonomy.csv", emit: taxonomy
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "read_sourmash.py"

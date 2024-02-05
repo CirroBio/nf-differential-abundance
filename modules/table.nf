@@ -11,7 +11,7 @@ process read {
     path "proportions.csv", emit: proportions
     path "taxonomy.csv", emit: taxonomy
     path "samplesheet.csv", emit: samplesheet
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "read_table.py"

@@ -12,7 +12,7 @@ process join_abund {
 
     output:
     path "${params.metric}.csv", emit: csv
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "join_abund.py"

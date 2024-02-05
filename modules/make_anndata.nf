@@ -12,7 +12,7 @@ process make_anndata {
 
     output:
         tuple path("${params.tool}.h5ad"), path("output_config.json")
-        path "*.log"
+        path "*.log", optional: true
         path "*.html"
 
     script:

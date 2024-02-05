@@ -23,7 +23,7 @@ process normalize {
 
     output:
         tuple path("normalized.h5ad"), path("output_config.json")
-        path "*.log"
+        path "*.log", optional: true
 
     script:
     template "ad_normalize.py"
@@ -38,7 +38,7 @@ process sort {
 
     output:
         tuple path("sorted.h5ad"), path("output_config.json")
-        path "*.log"
+        path "*.log", optional: true
 
     script:
     template "ad_sort.py"
@@ -55,7 +55,7 @@ process annotate {
 
     output:
         tuple path("annotated.h5ad"), path("output_config.json")
-        path "*.log"
+        path "*.log", optional: true
         path "*.csv"
 
     script:
