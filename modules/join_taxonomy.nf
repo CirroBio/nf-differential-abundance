@@ -8,7 +8,7 @@ process join_taxonomy {
 
     output:
     path "taxonomy.csv", emit: csv
-    path "*.log", emit: log
+    path "*.log", emit: log, optional: true
 
     script:
     template "join_taxonomy.py"
