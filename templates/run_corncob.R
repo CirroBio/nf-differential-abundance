@@ -11,7 +11,8 @@ read_counts <- read.table(
   header = TRUE,
   row.names = 1
 )
-print(head(read_counts))
+print(head(t(head(t(read_counts)))))
+print(paste("Rows:", nrow(read_counts), "Columns:", ncol(read_counts)))
 
 # Read in metadata annotations
 print("Reading metadata")
@@ -22,7 +23,14 @@ metadata <- read.table(
   row.names = 1,
   stringsAsFactors = FALSE
 )
-print(head(metadata))
+print(head(t(head(t(metadata)))))
+print(paste("Rows:", nrow(metadata), "Columns:", ncol(metadata)))
+
+if(length("${params.filter}") > 0){
+  print("Filtering samples by ${params.filter}")
+  metadata <- dplyr::filter(metadata, ${params.filter})
+  print(paste("Rows:", nrow(metadata), "Columns:", ncol(metadata)))
+}
 
 # Read in the fake taxonomy table
 print("Reading taxonomy")
