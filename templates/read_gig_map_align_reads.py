@@ -43,6 +43,10 @@ def read_counts() -> Tuple[pd.DataFrame, pd.DataFrame]:
         )
         .fillna(0)
     )
+
+    # Only keep specimens with nreads > 0
+    wide_df = wide_df.loc[wide_df.sum(axis=1) > 0]
+
     log(f"Number of genes: {wide_df.shape[1]:,}")
     log(f"Number of samples: {wide_df.shape[0]:,}")
 

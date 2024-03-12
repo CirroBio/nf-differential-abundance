@@ -21,6 +21,9 @@ def main():
         )
         .T
         .fillna(0)
+        .assign(_sum=lambda d: d.sum(axis=1))
+        .query("_sum > 0")
+        .drop(columns="_sum")
         .sort_index(axis=0)
         .sort_index(axis=1)
         .to_csv("${params.metric}.csv")

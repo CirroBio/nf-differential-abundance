@@ -33,6 +33,11 @@ def split_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     ]
     metadata = df.reindex(columns=metadata_cnames)
     abunds = df.reindex(columns=abund_cnames)
+
+    # Only keep samples with abunds > 0
+    abunds = abunds.loc[abunds.sum(axis=1) > 0]
+    metadata = metadata.loc[abunds.index]
+
     return metadata, abunds
 
 

@@ -143,6 +143,9 @@ if __name__ == "__main__":
     metadata = read_metadata()
     counts = read_counts()
 
+    # Only keep samples with counts > 0
+    counts = counts.loc[counts.sum(axis=1) > 0]
+
     # Merge counts at the indicated level
     counts, taxonomy = merge_counts(counts, taxonomy)
 

@@ -46,6 +46,9 @@ if __name__ == "__main__":
     counts = read_table("${abund}", **read_kwargs)
     counts.index.names = ['sample']
 
+    # Only keep samples with counts > 0
+    counts = counts.loc[counts.sum(axis=1) > 0]
+
     # Read in the table of metadata
     metadata = read_table("metadata.csv", index_col=0)
     metadata.index.names = ['sample']
