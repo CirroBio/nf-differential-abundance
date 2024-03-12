@@ -34,16 +34,13 @@ log(str(adata))
 
 # Sort features and observations
 def sort(adata: ad.AnnData):
-    return adata[
-        adata.obs_names[
-            hierarchy.leaves_list(
-                hierarchy.linkage(
-                    adata.X,
-                    method="ward"
-                )
-            )
-        ]
-    ].copy()
+    try:
+        L = hierarchy.linkage(adata.X, method="ward")
+    except ValueError:
+        log("Skipping sorting")
+        return adata
+    obs_order = hierarchy.leaves_list(L)
+    return adata[adata.obs_names[obs_order]].copy()
 
 
 log("Sorting observations")

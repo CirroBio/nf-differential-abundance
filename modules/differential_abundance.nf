@@ -1,6 +1,7 @@
 // Functions shared across input types
 include { make_anndata } from './make_anndata.nf'
 include { corncob } from './corncob.nf'
+include { radEmu } from './radEmu.nf'
 include { mannwhitneyu } from './mannwhitneyu.nf'
 include { viz } from './viz.nf'
 
@@ -14,7 +15,7 @@ workflow differential_abundance {
 
     main:
 
-        if(params.method == "corncob"){
+        if (params.method == "corncob") {
 
             // Run corncob for stats
             corncob(
@@ -24,10 +25,16 @@ workflow differential_abundance {
             )
             stats_output = corncob.out
 
-        } else {
-            if(params.method != "mannwhitneyu"){
-                error "Parameter 'method' not recognized: ${params.method}"
-            }
+        } else if (params.method == "radEmu") {
+            // Run radEmu for stats
+            radEmu(
+                counts,
+                taxonomy,
+                samplesheet
+            )
+            stats_output = radEmu.out
+
+        } else if (params.method == "mannwhitneyu") {
             // Run mannwhitneyu for stats
             mannwhitneyu(
                 proportions,
@@ -35,6 +42,8 @@ workflow differential_abundance {
             )
             stats_output = mannwhitneyu.out.csv
 
+        } else {
+            error "Parameter 'method' not recognized: ${params.method}"
         }
 
         // Make an AnnData object with both proportions and counts

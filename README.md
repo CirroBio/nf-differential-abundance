@@ -13,7 +13,7 @@ input types.
 Parameters which are used in common across all input types.
 
 - `formula`: String like `"colA + colB"` used for statistical modeling
-- `method`: Statistical method used (options: `corncob` (default), `mannwhitneyu`)
+- `method`: Statistical method used (options: `corncob` (default), `radEmu`, `mannwhitneyu`)
 - `data_output`: Output folder used for human-readable data
 - `web_output`: Output folder used for web-readable data
 

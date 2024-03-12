@@ -194,7 +194,7 @@ for stats_fp in Path("stats/").rglob("*.csv"):
     adata.uns[f"varm_cnames_{name}"] = df.columns.values
 
     # For the mu., make a volcano plot
-    if name.startswith("mu.") or "${params.method}" == "mannwhitneyu":
+    if name.startswith("mu.") or "${params.method}" != "corncob":
 
         # The statistical method used will impact the:
         # - parsing of metric name from file name
@@ -203,6 +203,10 @@ for stats_fp in Path("stats/").rglob("*.csv"):
             kw = name
             effect_cname = "lfc"
             effect_title = "Fold Change (log10)"
+        elif "${params.method}" == "radEmu":
+            kw = name
+            effect_cname = "est_coef"
+            effect_title = "Estimated Coefficient of Association"
         else:
             kw = name[3:]
             effect_cname = "est_coef"
