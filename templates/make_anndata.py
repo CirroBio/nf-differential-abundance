@@ -117,6 +117,13 @@ adata = AnnData(
                 else []
             )
         )
+        .apply(
+            lambda cvals: (
+                cvals
+                if cvals.apply(type).nunique() == 1
+                else cvals.astype(str)
+            )
+        )
     ),
     var=(
         dat["taxonomy"]
