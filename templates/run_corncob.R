@@ -50,10 +50,11 @@ dv_analysis <- differentialTest(
   formula_null = ~ 1,
   phi.formula_null = ~ 1,
   data = phy,
-  test = "LRT",
+  test = "Wald",
   boot = FALSE,
   fdr_cutoff = ${params.fdr_cutoff},
-  taxa_are_rows=TRUE
+  taxa_are_rows=TRUE,
+  allow_noninteger=TRUE
 )
 
 reformat_dv <- function(m, n){
