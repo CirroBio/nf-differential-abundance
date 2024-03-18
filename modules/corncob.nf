@@ -1,11 +1,11 @@
+include { filter } from "./filter.nf"
+
 process run_corncob {
     container "${params.container__corncob}"
     publishDir "${params.data_output}/logs/", mode: 'copy', overwrite: true, pattern: "*.log"
 
     input:
-    path "counts.csv"
-    path "taxonomy.csv"
-    path "metadata.csv"
+    tuple path("counts.csv"), path("taxonomy.csv"), path("metadata.csv")
 
     output:
     path "corncob_results.csv", emit: csv
@@ -38,10 +38,15 @@ workflow corncob {
         metadata
 
     main:
-        run_corncob(
+
+        filter(
             counts,
             taxonomy,
             metadata
+        )
+
+        run_corncob(
+            filter.out.csv
         )
 
         split_corncob(

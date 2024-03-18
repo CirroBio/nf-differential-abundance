@@ -97,9 +97,27 @@ for kw, df in dat.items():
     log(f"Rows: {df.shape[0]:,}")
     log(f"Columns: {df.shape[1]:,}")
 
+# For each of the statistical tests, read in the results
+stats = {
+    stats_fp.name.replace(".csv", ""): pd.read_csv(stats_fp, index_col=0)
+    for stats_fp in Path("stats/").rglob("*.csv")
+}
+
+# Make a list of any variables which have stats results
+all_vars = list(set([
+    var_name
+    for df in stats.values()
+    for var_name in df.index
+]))
+
 # Make an AnnData object
 adata = AnnData(
-    dat["proportions"].apply(lambda r: r / r.sum(), axis=1),
+    (
+        dat
+        ["proportions"]
+        .apply(lambda r: r / r.sum(), axis=1)
+        .reindex(columns=all_vars)
+    ),
     obs=(
         # Make sure that we're indexing on the sample column
         dat["samplesheet"]
@@ -121,7 +139,7 @@ adata = AnnData(
             lambda cvals: (
                 cvals
                 if cvals.apply(type).nunique() == 1
-                else cvals.astype(str)
+                else cvals.fillna("").astype(str)
             )
         )
     ),
@@ -131,9 +149,13 @@ adata = AnnData(
             mean_proportion=dat["proportions"].mean(),
             mean_prevalence=(dat["proportions"] > 0).mean()
         )
+        .reindex(index=all_vars)
     ),
     layers=dict(
-        counts=dat["counts"]
+        counts=(
+            dat["counts"]
+            .reindex(columns=all_vars)
+        )
     )
 )
 
@@ -146,26 +168,20 @@ obs_sets = [
     for cname in adata.obs.columns.values
 ]
 
-# Filter by minimum abundance
-min_abund = float("${params.min_abund}")
-log(f"Minimum abundance threshold: {min_abund}")
-mask = adata.to_df().max() > min_abund
-log(f"Filtering to {mask.sum():,} / {mask.shape[0]:,} taxa")
-adata = adata[:, mask]
-
 # Color taxa that exceed the fdr_cutoff
 fdr_cutoff = float("${params.fdr_cutoff}")
 
-
 # Start building the list of elements for visualization
 config = dict()
-for stats_fp in Path("stats/").rglob("*.csv"):
-
-    # Read the table
-    df = pd.read_csv(stats_fp, index_col=0)
+for name, df in stats.items():
+    # Name for the stat
+    log(name)
 
     # Make the order match
-    df = df.reindex(index=adata.var_names)
+    df = (
+        df
+        .reindex(index=adata.var_names)
+    )
 
     # Add the -log10(pvalue)
     df = df.assign(
@@ -186,9 +202,6 @@ for stats_fp in Path("stats/").rglob("*.csv"):
         )
     )
 
-    # Name for the stat
-    name = stats_fp.name.replace(".csv", "")
-    log(name)
     # Save the whole table
     adata.varm[name] = df
     adata.uns[f"varm_cnames_{name}"] = df.columns.values

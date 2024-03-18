@@ -21,22 +21,30 @@ def log(s: str):
         logging.info(line)
 
 
-counts = pd.read_csv("counts.csv", index_col=0)
-log(counts.head().to_csv())
+def filter_metadata(metadata):
+    filter = "${params.filter}"
+    if len(filter) > 0:
+        logging.info(f"Filtering samples by {filter}")
+        metadata = metadata.query(filter)
+        logging.info(f"Filtered to {metadata.shape[0]:,} samples")
+    return metadata
 
-log("Calculating CLR")
+
+def filter_counts(counts, metadata):
+
+    # Subset the counts to only include the samples in the (filtered) metadata
+    counts = counts.loc[metadata.index]
+
+    min_prevalence = float("${params.min_prevalence}")
+    logging.info(f"Minimum prevalence filter: {min_prevalence} (proportion of samples)")
+    counts = counts.loc[:, (counts > 0).mean() > min_prevalence]
+    logging.info(f"Filtered to {counts.shape[1]:,} taxa")
+    return counts
 
 
 def clr(r: pd.Series):
     logvals = np.log10(r + 1)
     return logvals - np.mean(logvals)
-
-
-props = counts.apply(clr, axis=1)
-log(props.head().to_csv())
-
-metadata = pd.read_csv("metadata.csv", index_col=0)
-log(metadata.head().to_csv())
 
 
 def mannwhitneyu(
@@ -75,19 +83,40 @@ def mannwhitneyu(
     )
 
 
-results = pd.DataFrame([
-    mannwhitneyu(
-        org,
-        org_props,
-        metadata,
-        formula_elem.strip()
-    )
-    for formula_elem in "${params.formula}".split("+")
-    for org, org_props in props.items()
-])
-results.set_index("org", inplace=True)
+if __name__ == "__main__":
 
-log(results.head().to_csv())
+    metadata = pd.read_csv("metadata.csv", index_col=0)
+    log(metadata.head().to_csv())
 
-for metadata, df in results.groupby("metadata"):
-    df.to_csv(f"{metadata}.csv")
+    log("Filtering metadata")
+    metadata = filter_metadata(metadata)
+
+    counts = pd.read_csv("counts.csv", index_col=0)
+    log(counts.head().to_csv())
+
+    counts = counts.loc[metadata.index]
+
+    log("Filtering counts")
+    counts = filter_counts(counts, metadata)
+
+    log("Calculating CLR")
+
+    props = counts.apply(clr, axis=1)
+    log(props.head().to_csv())
+
+    results = pd.DataFrame([
+        mannwhitneyu(
+            org,
+            org_props,
+            metadata,
+            formula_elem.strip()
+        )
+        for formula_elem in "${params.formula}".split("+")
+        for org, org_props in props.items()
+    ])
+    results.set_index("org", inplace=True)
+
+    log(results.head().to_csv())
+
+    for metadata, df in results.groupby("metadata"):
+        df.to_csv(f"{metadata}.csv")
