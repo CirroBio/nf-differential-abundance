@@ -98,8 +98,24 @@ for kw, df in dat.items():
     log(f"Columns: {df.shape[1]:,}")
 
 # For each of the statistical tests, read in the results
+# and make any adjustments to column names which are needed
+stats_name_map = {
+    "PValue": "p_value",
+    "pvalue": "p_value",
+    "pval": "p_value",
+    "we.ep": "p_value",
+    "P.Value": "p_value",
+    "pvalues": "p_value",
+    "coef": "est_coef",
+    "effect": "est_coef",
+    "logFC": "est_coef",
+    "log2FoldChange": "est_coef"
+}
 stats = {
-    stats_fp.name.replace(".csv", ""): pd.read_csv(stats_fp, index_col=0)
+    stats_fp.name.replace(".csv", ""): (
+        pd.read_csv(stats_fp, index_col=0)
+        .rename(columns=stats_name_map)
+    )
     for stats_fp in Path("stats/").rglob("*.csv")
 }
 

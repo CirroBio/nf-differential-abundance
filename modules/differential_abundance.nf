@@ -3,6 +3,7 @@ include { make_anndata } from './make_anndata.nf'
 include { corncob } from './corncob.nf'
 include { radEmu } from './radEmu.nf'
 include { mannwhitneyu } from './mannwhitneyu.nf'
+include { nearing } from './nearing.nf'
 include { viz } from './viz.nf'
 
 workflow differential_abundance {
@@ -43,22 +44,35 @@ workflow differential_abundance {
             stats_output = mannwhitneyu.out.csv
 
         } else {
-            error "Parameter 'method' not recognized: ${params.method}"
+            // For any other method, try to run it using the code published
+            // by Nearing, et al.
+            nearing(
+                counts,
+                taxonomy,
+                samplesheet
+            )
+            stats_output = nearing.out
         }
 
-        // Make an AnnData object with both proportions and counts
-        // as well as the stats results
-        make_anndata(
-            counts,
-            proportions,
-            taxonomy,
-            samplesheet,
-            stats_output
-        )
+        // Skip the downstream for several methods, which do not provide
+        // a p-value or estimated coefficient of association
+        if(!["ANCOM", "Corncob", "t_test_rare", "Wilcox_CLR", "Wilcox_rare"].contains(params.method)){
 
-        // Make the visualization elements
-        if(params.run_viz){
-            viz(make_anndata.out[0])
+            // Make an AnnData object with both proportions and counts
+            // as well as the stats results
+            make_anndata(
+                counts,
+                proportions,
+                taxonomy,
+                samplesheet,
+                stats_output
+            )
+
+            // Make the visualization elements
+            if(params.run_viz){
+                viz(make_anndata.out[0])
+            }
+
         }
 
 }

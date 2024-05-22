@@ -224,3 +224,33 @@ Parameters:
 of reads aligning to that gene divided by the total number of reads collected from the specimen.
 If `false` (by default), use the total number of reads which align to any gene in this analysis
 as the denominator instead.
+
+## Nearing, et al.
+
+The analysis code used in the publication "Comparison of differential abundance analysis methods for microbiome data" was downloaded from the repository at:
+
+ - https://github.com/nearinj/Comparison_of_DA_microbiome_methods/releases/tag/v1.0.2
+
+Using the code written by those authors, differential abundance analysis can be performed
+for the statistical methods:
+
+- `Aldex2`
+- `ANCOM`
+- `DESeq2`
+- `edgeR`
+- `Limma_Voom_TMM`
+- `Limma_Voom_TMMwsp`
+- `Maaslin2`
+- `metagenomeSeq`
+- `t_test_rare`
+- `Wilcox_CLR`
+- `Wilcox_rare`
+
+> Note: The implementation of these methods only supports two-group comparisons.
+The `formula` parameter must only list a single column from the metadata, and
+there can be no more than two distinct values in that column.
+We advise using 0/1 to avoid confusion of interpretation.
+
+**Citation**:
+
+Nearing JT, Douglas GM, Hayes MG, MacDonald J, Desai DK, Allward N, Jones CMA, Wright RJ, Dhanani AS, Comeau AM, Langille MGI. Microbiome differential abundance methods produce different results across 38 datasets. Nat Commun. 2022 Jan 17;13(1):342. doi: 10.1038/s41467-022-28034-z. Erratum in: Nat Commun. 2022 Feb 3;13(1):777. PMID: 35039521; PMCID: PMC8763921.
