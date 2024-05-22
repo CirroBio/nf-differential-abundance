@@ -57,6 +57,8 @@ workflow differential_abundance {
         )
 
         // Make the visualization elements
-        viz(make_anndata.out[0])
+        if(params.run_viz){
+            viz(make_anndata.out[0])
+        }
 
 }
