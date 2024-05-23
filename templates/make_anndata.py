@@ -199,6 +199,9 @@ for name, df in stats.items():
         .reindex(index=adata.var_names)
     )
 
+    # Drop any columns which are all NaN
+    df = df.dropna(axis=1, how="all")
+
     # Add the -log10(pvalue)
     df = df.assign(
         neg_log10_pvalue=-df["p_value"].apply(np.log10),
