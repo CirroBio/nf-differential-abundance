@@ -119,6 +119,14 @@ stats = {
     for stats_fp in Path("stats/").rglob("*.csv")
 }
 
+for kw, df in stats.items():
+    log(kw)
+    log(df.head().to_csv())
+    log(f"Rows: {df.shape[0]:,}")
+    log(f"Columns: {df.shape[1]:,}")
+    assert "p_value" in df.columns.values
+    assert "est_coef" in df.columns.values
+
 # Make a list of any variables which have stats results
 all_vars = list(set([
     var_name
