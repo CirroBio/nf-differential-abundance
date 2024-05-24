@@ -240,18 +240,12 @@ for name, df in stats.items():
         # The statistical method used will impact the:
         # - parsing of metric name from file name
         # - variable used to show effect size
-        if "${params.method}" == "mannwhitneyu":
-            kw = name
-            effect_cname = "lfc"
-            effect_title = "Fold Change (log10)"
-        elif "${params.method}" == "radEmu":
-            kw = name
-            effect_cname = "est_coef"
-            effect_title = "Estimated Coefficient of Association"
-        else:
+        effect_cname = "est_coef"
+        effect_title = "Fold Change (log10)"
+        if "${params.method}" == "corncob":
             kw = name[3:]
-            effect_cname = "est_coef"
-            effect_title = "Estimated Coefficient of Association"
+        else:
+            kw = name
 
         volcano_varm = kw + "_volcano"
         add_varm(adata, volcano_varm, df, [effect_cname, "neg_log10_pvalue"])
