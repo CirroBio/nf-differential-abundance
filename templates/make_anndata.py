@@ -109,6 +109,7 @@ stats_name_map = {
     "coef": "est_coef",
     "effect": "est_coef",
     "logFC": "est_coef",
+    "lfc": "est_coef",
     "log2FoldChange": "est_coef"
 }
 stats = {
