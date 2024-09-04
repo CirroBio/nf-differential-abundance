@@ -91,6 +91,17 @@ dat = {
     if not fp.name.startswith(("mu.", "phi."))
 }
 
+# Find any samples which have 0 counts
+zero_counts = (
+    dat["counts"].index.values
+    [dat["counts"].sum(axis=1) == 0]
+)
+if len(zero_counts) > 0:
+    log("Dropping samples with 0 counts:")
+    log("\\n".join(map(str, zero_counts)))
+    dat["counts"] = dat["counts"].drop(index=zero_counts)
+    dat["proportions"] = dat["proportions"].drop(index=zero_counts)
+
 for kw, df in dat.items():
     log(kw)
     log(df.head().to_csv())
