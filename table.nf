@@ -18,6 +18,9 @@ workflow {
     if(!params.formula){
         error "Must provide param: formula"
     }
+    if(!["samples_in_rows", "features_in_rows"].contains(params.orientation)){
+        error "Param orientation must be samples_in_rows or features_in_rows, not ${params.orientation}"
+    }
 
     input = file(params.input, checkIfExists: true)
     metadata = file(params.metadata, checkIfExists: true)

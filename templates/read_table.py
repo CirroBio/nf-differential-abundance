@@ -44,7 +44,13 @@ if __name__ == "__main__":
     log("Parsing params.read_kwargs")
     read_kwargs = json.loads('${params.read_kwargs}')
     counts = read_table("${abund}", **read_kwargs)
+    if "${params.orientation}" == "features_in_rows":
+        log("Transposing so that samples are in rows")
+        counts = counts.T
     counts.index.names = ['sample']
+    # Sample IDs from a header row are strings, while those in an index
+    # column may be parsed as numbers; compare them as strings
+    counts.index = counts.index.astype(str)
 
     # Only keep samples with counts > 0
     counts = counts.loc[counts.sum(axis=1) > 0]
@@ -52,6 +58,7 @@ if __name__ == "__main__":
     # Read in the table of metadata
     metadata = read_table("metadata.csv", index_col=0)
     metadata.index.names = ['sample']
+    metadata.index = metadata.index.astype(str)
 
     # Only write out samples which are shared
     shared_samples = list(
