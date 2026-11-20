@@ -9,7 +9,8 @@ read_counts <- read.table(
   "counts.csv",
   sep = ",",
   header = TRUE,
-  row.names = 1
+  row.names = 1,
+  check.names = FALSE
 )
 print(head(t(head(t(read_counts)))))
 print(paste("Rows:", nrow(read_counts), "Columns:", ncol(read_counts)))
